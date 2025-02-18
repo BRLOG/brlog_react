@@ -1,91 +1,50 @@
-# 기술블로그 웹 서비스 기획안
+# React + TypeScript + Vite
 
-## 1. 개요
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-기술블로그 웹 서비스는 **Admin(JG, BR)** 만이 게시글을 작성할 수 있으며, 일반 사용자(User)들은 댓글 및 실시간 채팅 기능을 활용할 수 있는 플랫폼이다. 개발자의 포트폴리오용 프로젝트로, 최신 기술 스택을 활용하여 구축된다.
+Currently, two official plugins are available:
 
-## 2. 주요 기능
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-### 2.1 사용자 역할 및 권한
+## Expanding the ESLint configuration
 
-- **Admin (JG, BR)**
-  - 게시글 작성, 수정, 삭제
-  - 댓글 관리 (삭제 가능)
-  - 사용자 관리
-- **User**
-  - 회원가입 및 로그인 (JWT 인증 사용)
-  - 댓글 작성 및 삭제 (자신의 댓글만 삭제 가능)
-  - 실시간 채팅 참여
+If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
 
-### 2.2 게시글 시스템
+- Configure the top-level `parserOptions` property like this:
 
-- **게시글 CRUD (Admin 전용)**
-  - 제목, 내용, 태그 입력 가능
-  - Markdown 지원
-  - 이미지 업로드 가능
-  - 좋아요 및 북마크 기능
-- **게시글 리스트 및 상세보기**
-  - 사용자들은 게시글을 자유롭게 열람 가능
-  - 태그별 검색 및 정렬 기능 제공
-
-### 2.3 댓글 기능
-
-- 로그인한 사용자만 댓글 작성 가능
-- 댓글 CRUD (자신의 댓글만 삭제 가능)
-- 대댓글 기능 (Threaded Comments)
-- Admin은 모든 댓글 삭제 가능
-
-### 2.4 실시간 채팅
-
-- C++ WebSocket 서버를 활용한 실시간 채팅 시스템
-- 회원만 채팅 가능
-- 1:1 및 그룹 채팅 지원
-- 실시간 알림 기능 (새 메시지 수신 시)
-
-### 2.5 추가 기능
-
-- **Markdown 지원 게시글 작성** (코드블럭, 리스트, 강조 등 포함)
-- **좋아요 및 북마크 기능** (사용자가 게시글을 저장 및 좋아요 가능)
-- **알림 시스템** (새 댓글, 채팅 메시지 알림)
-- **회원 프로필 관리** (닉네임, 프로필 이미지 변경 가능)
-- **반응형 디자인** (모바일 최적화)
-
-## 3. 기술 스택
-
-| 영역            | 기술                              |
-| ------------- | ------------------------------- |
-| **Frontend**  | React, TypeScript, Tailwind CSS |
-| **Backend**   | Spring Boot, JWT, MySQL         |
-| **WebSocket** | C++ (IOCP 활용)                   |
-| **DevOps**    | Docker, AWS (EC2, RDS)          |
-
-## 4. 시스템 아키텍처
-
-```
-[React Frontend] <---> [Spring Boot Backend] <---> [C++ WebSocket Server]
-                                       |
-                                    [MySQL Database]
+```js
+export default tseslint.config({
+  languageOptions: {
+    // other options...
+    parserOptions: {
+      project: ['./tsconfig.node.json', './tsconfig.app.json'],
+      tsconfigRootDir: import.meta.dirname,
+    },
+  },
+})
 ```
 
-## 5. 개발 일정 (초안)
+- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
+- Optionally add `...tseslint.configs.stylisticTypeChecked`
+- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
 
-1. **기획 및 설계 (\~2주)**
-   - 요구사항 정의
-   - DB 설계, API 명세 작성
-2. **프론트엔드 개발 (\~4주)**
-   - UI/UX 디자인
-   - React 기반 개발
-3. **백엔드 개발 (\~4주)**
-   - Spring Boot API 개발
-   - JWT 인증 및 DB 연동
-4. **WebSocket 서버 개발 (\~3주)**
-   - C++ 기반 채팅 서버 개발
-5. **테스트 및 배포 (\~2주)**
-   - 통합 테스트, 배포
+```js
+// eslint.config.js
+import react from 'eslint-plugin-react'
 
-## 6. 향후 개선 사항
-
-- 다국어 지원
-- 댓글에 Markdown 지원
-- AI 기반 추천 게시글 기능 추가
-
+export default tseslint.config({
+  // Set the react version
+  settings: { react: { version: '18.3' } },
+  plugins: {
+    // Add the react plugin
+    react,
+  },
+  rules: {
+    // other rules...
+    // Enable its recommended rules
+    ...react.configs.recommended.rules,
+    ...react.configs['jsx-runtime'].rules,
+  },
+})
+```
