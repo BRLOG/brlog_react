@@ -65,7 +65,7 @@ const FeatureCarousel: React.FC = () => {
     }, [activeSlide, totalSlides]);
 
     return (
-        <div className="w-full">
+        <div className="w-full bg-base-100">
             <div className="relative overflow-hidden h-[500px]">
                 {/* 슬라이드 컨테이너 */}
                 <div 

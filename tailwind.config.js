@@ -9,6 +9,6 @@ export default {
   },
   plugins: [require("daisyui")], // DaisyUI 플러그인 추가!
   daisyui: {
-    themes: ["light", "dark", "cupcake"], // 사용할 테마 목록
+    themes: ["light", "dark", "forest"], // 사용할 테마 목록
   },
 };

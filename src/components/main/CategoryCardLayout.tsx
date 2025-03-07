@@ -50,7 +50,7 @@ interface CategorySectionProps {
 // 개별 카드 컴포넌트
 const Card: React.FC<CardProps> = ({ title, description, image, tag }) => {
     return (
-        <div className="flex-shrink-0 w-full sm:w-[calc(100%/3-16px)] bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="bg-accent flex-shrink-0 w-full sm:w-[calc(100%/3-16px)] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
             <div className="h-48 overflow-hidden flex justify-center"> {/* flex justify-center 추가 */}
                 <img src={image} alt={title} className="h-full transition-transform duration-500 hover:scale-105" /> {/* w-full object-cover 삭제 */}
             </div>
