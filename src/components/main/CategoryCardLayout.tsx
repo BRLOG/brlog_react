@@ -125,7 +125,7 @@ const CardCarousel: React.FC<CardCarouselProps> = ({ cards }) => {
 const CategorySection: React.FC<CategorySectionProps> = ({ title, cards }) => {
     return (
         <div className="mb-16">
-            <h2 className="text-2xl font-bold mb-6 text-gray-800">{title}</h2>
+            <h2 className="text-2xl font-bold mb-6 text-base-content">{title}</h2>
             <CardCarousel cards={cards} />
         </div>
     );

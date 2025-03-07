@@ -6,6 +6,8 @@ import CategoryCardLayout from './components/main/CategoryCardLayout';
 import Login from "./pages/login/Login";
 import Signup from "./pages/login/Signup";
 import NavigationBar from "./components/common/NavigationBar"; 
+import Board from "./pages/board/Board"; 
+import BoardWrite from "./pages/board/BoardWrite";
 import { ThemeProvider } from './contexts/ThemeContext';
 
 // 메인 레이아웃 컴포넌트
@@ -22,6 +24,18 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 <main className="container mx-auto px-6 py-8 overflow-hidden">
                     {children}
                 </main>
+            </div>
+        </>
+    );
+};
+
+// 기본 레이아웃 (게시판, ..)
+const DefaultLayout: React.FC<MainLayoutProps> = ({ children }) => {
+    return (
+        <>
+            <NavigationBar />
+            <div className="min-h-screen bg-base-100">
+                {children}
             </div>
         </>
     );
@@ -52,6 +66,26 @@ const App: React.FC = () => {
                             <MainLayout>
                                 <CategoryCardLayout />
                             </MainLayout>
+                        } 
+                    />
+
+                    {/* 게시판 페이지 */}
+                    <Route 
+                        path="/board" 
+                        element={
+                            <DefaultLayout>
+                                <Board />
+                            </DefaultLayout>
+                        } 
+                    />
+
+                    {/* 게시글 작성 페이지 */}
+                    <Route 
+                        path="/board/new" 
+                        element={
+                            <DefaultLayout>
+                                <BoardWrite />
+                            </DefaultLayout>
                         } 
                     />
                     

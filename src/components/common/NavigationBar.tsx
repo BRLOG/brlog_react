@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext'; 
 import logo_brlog from '../../assets/img/brlog3.png'; 
 
@@ -16,6 +16,7 @@ const getThemeIcon = (currentTheme: string, resolvedTheme: string) => {
 
 const NavigationBar: React.FC = () => {
     const { theme, setTheme, resolvedTheme } = useTheme();
+    const location = useLocation(); // 현재 경로 가져오기
     
     return (
         <nav className="w-full bg-base-100 border-gray-300 shadow-md relative">
@@ -26,10 +27,11 @@ const NavigationBar: React.FC = () => {
                 </div>
 
                 {/* 메뉴 */}
-                <div className="flex space-x-24 text-lg text-gray-400">
-                    <Link to="/" className="text-gray-400 hover:text-gray-700">Home</Link>
-                    <Link to="#" className="text-gray-400 hover:text-gray-700">게시판</Link>
-                    <Link to="#" className="text-gray-400 hover:text-gray-700">BR</Link>
+                <div className="flex space-x-24 text-base">
+                
+                    <Link to="/" className={`hover:text-accent-content transition-colors ${ location.pathname === '/' ? 'text-accent-content font-semibold' : 'text-base-content/70' }`}>Home</Link>
+                    <Link to="/board" className={`hover:text-accent-content transition-colors ${ location.pathname.startsWith('/board') ? 'text-accent-content font-semibold' : 'text-base-content/70' }`}>게시판</Link>
+                    <Link to="#" className="text-base-content/70 hover:text-accent-content transition-colors">BR</Link>
                 </div>
 
                 {/* 오른쪽 영역: 로그인 버튼 + 테마 변경 */}
