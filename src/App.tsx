@@ -1,14 +1,40 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
 import FeatureCarousel from './components/main/FeatureCarousel';
 import CategoryCardLayout from './components/main/CategoryCardLayout'; 
 import Login from "./pages/login/Login";
 import Signup from "./pages/login/Signup";
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import NavigationBar from "./components/common/NavigationBar"; 
 import Board from "./pages/board/Board"; 
 import BoardWrite from "./pages/board/BoardWrite";
 import { ThemeProvider } from './contexts/ThemeContext';
+
+// 보호된 라우트 컴포넌트
+interface ProtectedRouteProps {
+    children: React.ReactNode;
+  }
+  
+  const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+    const { isAuthenticated, loading } = useAuth();
+    
+    // 로딩 중일 때는 로딩 표시
+    if (loading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="loading loading-spinner loading-lg"></div>
+        </div>
+      );
+    }
+    
+    // 인증되지 않았다면 로그인 페이지로 리디렉션
+    {/*if (!isAuthenticated) {
+      return <Navigate to="/login" replace />;
+    }*/}
+    
+    return <>{children}</>;
+  };
 
 // 메인 레이아웃 컴포넌트
 interface MainLayoutProps {
@@ -57,59 +83,63 @@ const AuthLayout: React.FC<MainLayoutProps> = ({ children }) => {
 const App: React.FC = () => {
     return (
         <ThemeProvider>
-            <Router>
-                <Routes>
-                    {/* 메인 페이지 */}
-                    <Route 
-                        path="/" 
-                        element={
-                            <MainLayout>
-                                <CategoryCardLayout />
-                            </MainLayout>
-                        } 
-                    />
+            <AuthProvider>
+                <Router>
+                    <Routes>
+                        {/* 메인 페이지 */}
+                        <Route 
+                            path="/" 
+                            element={
+                                <MainLayout>
+                                    <CategoryCardLayout />
+                                </MainLayout>
+                            } 
+                        />
 
-                    {/* 게시판 페이지 */}
-                    <Route 
-                        path="/board" 
-                        element={
-                            <DefaultLayout>
-                                <Board />
-                            </DefaultLayout>
-                        } 
-                    />
+                        {/* 게시판 페이지 */}
+                        <Route 
+                            path="/board" 
+                            element={
+                                <DefaultLayout>
+                                    <Board />
+                                </DefaultLayout>
+                            } 
+                        />
 
-                    {/* 게시글 작성 페이지 */}
-                    <Route 
-                        path="/board/new" 
-                        element={
-                            <DefaultLayout>
-                                <BoardWrite />
-                            </DefaultLayout>
-                        } 
-                    />
-                    
-                    {/* 로그인 페이지 */}
-                    <Route 
-                        path="/login" 
-                        element={
-                            <AuthLayout>
-                                <Login />
-                            </AuthLayout>
-                        } 
-                    />
-                    
-                    {/* 회원가입 페이지 */}
-                    <Route 
-                        path="/signup" 
-                        element={
-                            <AuthLayout>
-                                <Signup />
-                            </AuthLayout>
-                        } 
-                    />
-                </Routes>
-            </Router>
+                        {/* 게시글 작성 페이지 */}
+                        <Route 
+                            path="/board/new" 
+                            element={
+                                <ProtectedRoute>
+                                    <DefaultLayout>
+                                        <BoardWrite />
+                                    </DefaultLayout>
+                                </ProtectedRoute>
+                            } 
+                        />
+                        
+                        {/* 로그인 페이지 */}
+                        <Route 
+                            path="/login" 
+                            element={
+                                <AuthLayout>
+                                    <Login />
+                                </AuthLayout>
+                            } 
+                        />
+                        
+                        {/* 회원가입 페이지 */}
+                        <Route 
+                            path="/signup" 
+                            element={
+                                <AuthLayout>
+                                    <Signup />
+                                </AuthLayout>
+                            } 
+                        />
+                    </Routes>
+                </Router>
+            </AuthProvider>
         </ThemeProvider>
     );
 }

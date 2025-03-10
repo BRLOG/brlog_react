@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext'; 
+import { useAuth } from '../../contexts/AuthContext';
 import logo_brlog from '../../assets/img/brlog3.png'; 
 
 // 테마 아이콘 선택 함수
@@ -17,7 +18,15 @@ const getThemeIcon = (currentTheme: string, resolvedTheme: string) => {
 const NavigationBar: React.FC = () => {
     const { theme, setTheme, resolvedTheme } = useTheme();
     const location = useLocation(); // 현재 경로 가져오기
+    const { isAuthenticated, user, logout, loading } = useAuth(); // 인증 상태 가져오기
     
+    // 로그아웃 처리
+    const handleLogout = async () => {
+        await logout();
+        // 로그아웃 후 홈으로 이동
+        window.location.href = '/';
+    };
+
     return (
         <nav className="w-full bg-base-100 border-gray-300 shadow-md relative">
             <div className="container mx-auto flex justify-between items-center px-6 py-4"> 
@@ -34,15 +43,41 @@ const NavigationBar: React.FC = () => {
                     <Link to="#" className="text-base-content/70 hover:text-accent-content transition-colors">BR</Link>
                 </div>
 
-                {/* 오른쪽 영역: 로그인 버튼 + 테마 변경 */}
+                {/* 오른쪽 영역: 로그인/사용자 메뉴 + 테마 변경 */}
                 <div className="flex items-center space-x-4">
-                    {/* 로그인 버튼 */}
-                    <Link 
-                        to="/login" 
-                        className="btn btn-outline hover:bg-gray-100 transition-colors"
-                    >
-                        로그인
-                    </Link>
+                    {/* 로그인 상태에 따라 다른 UI 표시 */}
+                    {loading ? (
+                        // 로딩 중일 때
+                        <span className="loading loading-spinner loading-sm"></span>
+                    ) : isAuthenticated ? (
+                        // 로그인된 경우 - 사용자 드롭다운 메뉴
+                        <div className="dropdown dropdown-end">
+                            <label tabIndex={0} className="btn btn-ghost avatar flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-full bg-primary text-primary-content flex items-center justify-center">
+                                    {user?.username?.charAt(0).toUpperCase() || 'U'}
+                                </div>
+                                <span className="hidden md:inline">{user?.username || '사용자'}</span>
+                            </label>
+                            <ul tabIndex={0} className="mt-3 z-50 p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52 border border-base-300">
+                                <li>
+                                    <Link to="/profile" className="justify-between">
+                                        내 프로필
+                                        <span className="badge badge-primary badge-sm">New</span>
+                                    </Link>
+                                </li>
+                                <li><Link to="/settings">설정</Link></li>
+                                <li><button onClick={handleLogout}>로그아웃</button></li>
+                            </ul>
+                        </div>
+                    ) : (
+                        // 로그인되지 않은 경우 - 로그인 버튼
+                        <Link 
+                            to="/login" 
+                            className="btn btn-outline hover:bg-base-200 transition-colors"
+                        >
+                            로그인
+                        </Link>
+                    )}
                 
                     {/* 테마 변경 드롭다운 */}
                     <div className="dropdown dropdown-end relative">
