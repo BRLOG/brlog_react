@@ -53,10 +53,20 @@ const NavigationBar: React.FC = () => {
                         // 로그인된 경우 - 사용자 드롭다운 메뉴
                         <div className="dropdown dropdown-end">
                             <label tabIndex={0} className="btn btn-ghost avatar flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-full bg-primary text-primary-content flex items-center justify-center">
-                                    {user?.username?.charAt(0).toUpperCase() || 'U'}
+                                <div className="w-8 h-8 rounded-full overflow-hidden">
+                                    {user?.profileImgUrl ? (
+                                        <img 
+                                            src={user.profileImgUrl} 
+                                            alt={user?.userNm || '프로필'} 
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full bg-primary text-primary-content flex items-center justify-center">
+                                            {user?.userNm?.charAt(0).toUpperCase() || 'U'}
+                                        </div>
+                                    )}
                                 </div>
-                                <span className="hidden md:inline">{user?.username || '사용자'}</span>
+                                <span className="hidden md:inline">{user?.userNm || '사용자'}</span>
                             </label>
                             <ul tabIndex={0} className="mt-3 z-50 p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52 border border-base-300">
                                 <li>

@@ -19,7 +19,7 @@ interface LoginFormState {
 }
 
 // 소셜 로그인 제공자 타입
-type SocialLoginProvider = "Google" | "Apple" | "Microsoft";
+type SocialLoginProvider = "google" | "apple" | "microsoft";
 
 const Login: React.FC = () => {
     const [form, setForm] = useState<LoginFormState>({ email: "", password: "" });
@@ -28,7 +28,15 @@ const Login: React.FC = () => {
     const navigate = useNavigate();
 
     // 인증 컨텍스트 사용
-    const { login, error, isAuthenticated, loading, socialLogin } = useAuth();
+    const { login, error, isAuthenticated, loading, socialLogin, handleOAuth2Redirect  } = useAuth();
+
+    // URL 파라미터 확인 - OAuth2 리디렉션 감지
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('token') || urlParams.has('error')) {
+            handleOAuth2Redirect();
+        }
+    }, [handleOAuth2Redirect]);
 
     // 인증 상태 변경 시 리다이렉트
     useEffect(() => {
@@ -66,7 +74,7 @@ const Login: React.FC = () => {
     const handleSocialLogin = (provider: SocialLoginProvider): void => {
         console.log(`${provider} 소셜 로그인 시도`);
         // AuthContext의 socialLogin 함수 사용
-        socialLogin(provider.toLowerCase());
+        socialLogin(provider);
     };
 
     return (
@@ -145,7 +153,7 @@ const Login: React.FC = () => {
                 <div className="mt-6 w-full max-w-md px-4 space-y-3">
                     <button
                         type="button"
-                        onClick={() => handleSocialLogin("Google")}
+                        onClick={() => handleSocialLogin("google")}
                         className="w-full py-2 border border-base-300 bg-base-100 hover:bg-base-200 flex items-center justify-center gap-2 btn btn-outline"
                         disabled={isSubmitting}
                     >
@@ -158,7 +166,7 @@ const Login: React.FC = () => {
                     </button>
                     <button
                         type="button"
-                        onClick={() => handleSocialLogin("Apple")}
+                        onClick={() => handleSocialLogin("apple")}
                         className="w-full py-2 border border-base-300 bg-base-100 hover:bg-base-200 flex items-center justify-center gap-2 btn btn-outline"
                         disabled={isSubmitting}
                     >
@@ -171,7 +179,7 @@ const Login: React.FC = () => {
                     </button>
                     <button
                         type="button"
-                        onClick={() => handleSocialLogin("Microsoft")}
+                        onClick={() => handleSocialLogin("microsoft")}
                         className="w-full py-2 border border-base-300 bg-base-100 hover:bg-base-200 flex items-center justify-center gap-2 btn btn-outline"
                         disabled={isSubmitting}
                     >

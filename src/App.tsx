@@ -5,10 +5,12 @@ import FeatureCarousel from './components/main/FeatureCarousel';
 import CategoryCardLayout from './components/main/CategoryCardLayout'; 
 import Login from "./pages/login/Login";
 import Signup from "./pages/login/Signup";
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import OAuth2Redirect from './components/auth/OAuth2Redirect';
 import NavigationBar from "./components/common/NavigationBar"; 
 import Board from "./pages/board/Board"; 
 import BoardWrite from "./pages/board/BoardWrite";
+
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 
 // 보호된 라우트 컴포넌트
@@ -137,6 +139,8 @@ const App: React.FC = () => {
                                 </AuthLayout>
                             } 
                         />
+
+                        <Route path="/oauth2/redirect" element={<OAuth2Redirect />} />
                     </Routes>
                 </Router>
             </AuthProvider>

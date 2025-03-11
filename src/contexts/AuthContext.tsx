@@ -3,10 +3,11 @@ import axios, { AxiosResponse, AxiosError } from 'axios';
 
 // 인증 사용자 타입 정의
 interface User {
-    id: number;
-    email: string;
-    username: string;
-    // 필요한 사용자 데이터 추가
+    userId: string;
+    userNm: string;
+    provider?: string;  // 소셜 로그인 제공자
+    providerId?: string; // 소셜 로그인 ID
+    profileImgUrl?: string; // 프로필 이미지 URL
 }
 
 // 인증 컨텍스트 타입 정의
@@ -19,6 +20,7 @@ interface AuthContextType {
     logout: () => Promise<void>;
     checkAuth: () => Promise<void>;
     socialLogin: (provider: string) => void;
+    handleOAuth2Redirect: () => void;
 }
 
 // 기본 컨텍스트 값
@@ -31,6 +33,7 @@ const defaultAuthContext: AuthContextType = {
     logout: async () => { },
     checkAuth: async () => { },
     socialLogin: () => { },
+    handleOAuth2Redirect: () => { },
 };
 
 // 인증 컨텍스트 생성
@@ -70,6 +73,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const socialLogin = (provider: string): void => {
         console.log(`${provider} 소셜 로그인 시도`);
         window.location.href = `${API_URL}/oauth2/authorize/${provider.toLowerCase()}`;
+    };
+
+    // OAuth2 리디렉션 처리 함수
+    const handleOAuth2Redirect = (): void => {
+        // URL 파라미터에서 토큰 추출
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        const error = urlParams.get('error');
+        
+        console.log('token? : ', token, ' / error?: ', error)
+        if (error) {
+            console.error('OAuth2 인증 오류:', error);
+            setError(`소셜 로그인 실패: ${error}`);
+            setLoading(false);
+            return;
+        }
+
+        if (token) {
+            console.log('OAuth2 토큰 받음:', token);
+            setToken(token);
+            
+            // 토큰으로 사용자 정보 가져오기
+            checkAuth().then(() => {
+                // URL에서 토큰 파라미터 제거하기 위한 히스토리 관리
+                const cleanUrl = window.location.pathname;
+                window.history.replaceState({}, document.title, cleanUrl);
+            });
+        }
     };
 
     // 로그인 함수
@@ -293,9 +324,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         };
     }, []);
 
-    // 컴포넌트 마운트 시 인증 상태 확인
-    useEffect(() => {
-        checkAuth();
+     // OAuth2 리디렉션 감지
+     useEffect(() => {
+        // URL에 token 파라미터가 있으면 OAuth2 리디렉션으로 판단
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('token') || urlParams.has('error')) {
+            handleOAuth2Redirect();
+        } else {
+            // 컴포넌트 마운트 시 인증 상태 확인
+            checkAuth();
+        }
     }, []);
 
     const contextValue: AuthContextType = {
@@ -307,6 +345,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         logout,
         checkAuth,
         socialLogin,
+        handleOAuth2Redirect
     };
 
     return (
