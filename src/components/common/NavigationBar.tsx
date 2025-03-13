@@ -38,9 +38,9 @@ const NavigationBar: React.FC = () => {
                 {/* 메뉴 */}
                 <div className="flex space-x-24 text-base">
                 
-                    <Link to="/" className={`hover:text-accent-content transition-colors ${ location.pathname === '/' ? 'text-accent-content font-semibold' : 'text-base-content/70' }`}>Home</Link>
-                    <Link to="/board" className={`hover:text-accent-content transition-colors ${ location.pathname.startsWith('/board') ? 'text-accent-content font-semibold' : 'text-base-content/70' }`}>게시판</Link>
-                    <Link to="#" className="text-base-content/70 hover:text-accent-content transition-colors">BR</Link>
+                    <Link to="/" className={`hover:text-base-content transition-colors ${ location.pathname === '/' ? 'text-base-content font-semibold' : 'text-base-content/45' }`}>Home</Link>
+                    <Link to="/board" className={`hover:text-base-content transition-colors ${ location.pathname.startsWith('/board') ? 'text-base-content font-semibold' : 'text-base-content/45' }`}>게시판</Link>
+                    <Link to="#" className="text-base-content hover:text-accent-content transition-colors">BR</Link>
                 </div>
 
                 {/* 오른쪽 영역: 로그인/사용자 메뉴 + 테마 변경 */}

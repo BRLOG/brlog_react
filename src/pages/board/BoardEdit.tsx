@@ -1,21 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import axios from 'axios';
-import ReactMarkdown from 'react-markdown';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw';
-
-import {
+import { 
     HiOutlineGlobe,
     HiOutlineQuestionMarkCircle,
     HiOutlineLightBulb,
     HiOutlineSpeakerphone,
     HiOutlineHeart,
     HiOutlineEye,
-    HiOutlineStar,
     HiOutlineCheck,
     HiOutlineInformationCircle
 } from 'react-icons/hi';
@@ -44,23 +37,27 @@ interface Category {
     color: string;
 }
 
-const BoardWrite: React.FC = () => {
+const BoardEdit: React.FC = () => {
     const navigate = useNavigate();
-    const { isAuthenticated, user } = useAuth(); // 인증 상태 가져오기
+    const { postId } = useParams<{ postId: string }>();
+    const { isAuthenticated, user } = useAuth();
+    const isEditMode = Boolean(postId);
 
     // 상태 관리
-    const [selectedCategory, setSelectedCategory] = useState<string>('development');
+    const [selectedCategory, setSelectedCategory] = useState<string>('general');
     const [title, setTitle] = useState<string>('');
     const [content, setContent] = useState<string>('');
     const [activeTab, setActiveTab] = useState<'write' | 'preview'>('write');
     const [loading, setLoading] = useState<boolean>(false);
+    const [fetchLoading, setFetchLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [categories, setCategories] = useState<Category[]>([]);
+    const [originalUserId, setOriginalUserId] = useState<string>('');
 
     // 인증 상태 확인 및 리디렉션
     useEffect(() => {
         if (!isAuthenticated) {
-            alert('게시글 작성을 위해 로그인이 필요합니다.');
+            alert('게시글 작성/수정을 위해 로그인이 필요합니다.');
             navigate('/login');
         }
     }, [isAuthenticated, navigate]);
@@ -70,16 +67,13 @@ const BoardWrite: React.FC = () => {
         const fetchCategories = async () => {
             try {
                 const response = await axios.get(`${API_URL}/post/categories`);
-                const categoriesData = response.data.data.map((category: Category) => ({
+                const categoriesData = response.data.data.map((category: any) => ({
                     ...category,
-                    icon: getCategoryIcon(category.id), // 아이콘 매핑 함수 추가
-                    color: getCategoryColor(category.id) // 색상 매핑 함수 추가
+                    icon: getCategoryIcon(category.id),
+                    color: getCategoryColor(category.id)
                 }));
 
-                console.log('categoriesData?: ', categoriesData)
                 setCategories(categoriesData);
-
-
             } catch (error) {
                 console.error('카테고리 로딩 중 오류:', error);
                 setError('카테고리를 불러오는 중 오류가 발생했습니다.');
@@ -89,15 +83,51 @@ const BoardWrite: React.FC = () => {
         fetchCategories();
     }, []);
 
+    // 수정 모드인 경우 게시글 데이터 가져오기
+    useEffect(() => {
+        if (isEditMode && postId) {
+            const fetchPost = async () => {
+                setFetchLoading(true);
+                try {
+                    const response = await axios.get(`${API_URL}/post/${postId}`);
+                    const post = response.data.data;
+                    
+                    // 자신의 게시글이 아니면 접근 제한
+                    if (user?.userId !== post.userId) {
+                        alert('게시글 수정 권한이 없습니다.');
+                        navigate(`/board/${postId}`);
+                        return;
+                    }
+                    
+                    setTitle(post.title);
+                    setContent(post.content);
+                    setSelectedCategory(post.categoryId);
+                    setOriginalUserId(post.userId);
+                    setError(null);
+                } catch (err) {
+                    console.error('게시글 데이터 불러오기 오류:', err);
+                    setError('게시글 데이터를 불러오는 중 오류가 발생했습니다.');
+                    navigate('/board');
+                } finally {
+                    setFetchLoading(false);
+                }
+            };
+            
+            fetchPost();
+        } else {
+            setFetchLoading(false);
+        }
+    }, [isEditMode, postId, navigate, user?.userId]);
+
     // 카테고리 아이콘 매핑 함수
     const getCategoryIcon = (categoryId: string) => {
         switch (categoryId) {
             case 'development': return <HiOutlineLightBulb />;
             case 'daily': return <HiOutlineHeart />;
-            case 'etc': return <HiOutlineStar />;
+            case 'etc': return <HiOutlineEye />;
             case 'announcements': return <HiOutlineSpeakerphone />;
             case 'help': return <HiOutlineQuestionMarkCircle />;
-            default: return <HiOutlineStar />;
+            default: return <HiOutlineGlobe />;
         }
     };
 
@@ -109,23 +139,22 @@ const BoardWrite: React.FC = () => {
             case 'etc': return 'bg-purple-500';
             case 'announcements': return 'bg-red-500';
             case 'help': return 'bg-orange-500';
-            default: return 'bg-purple-500';
+            default: return 'bg-gray-500';
         }
     };
 
     // 선택된 카테고리
-    console.log('categories?: ', categories)
     // 기본 카테고리 설정
     const defaultCategory = {
-        id: 'development',
-        name: '개발',
-        description: '개발 관련 게시글 공유',
-        icon: <HiOutlineLightBulb />,
-        color: 'bg-yellow-500'
+        id: 'general',
+        name: '일반',
+        description: '일반 주제',
+        icon: <HiOutlineGlobe />,
+        color: 'bg-gray-500'
     };
     const currentCategory = categories.find(cat => cat.id === selectedCategory) || (categories.length > 0 ? categories[0] : defaultCategory);
 
-    // 게시글 등록 처리
+    // 게시글 등록/수정 처리
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -143,25 +172,38 @@ const BoardWrite: React.FC = () => {
         setError(null);
 
         try {
-            // API 호출하여 게시글 저장
-            const response = await axios.post(`${API_URL}/post`, {
-                categoryId: selectedCategory,
-                title: title,
-                content: content
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                }
-            });
-
-            console.log('게시글 등록 응답:', response.data);
-            
-            // 성공 시 게시판 목록으로 이동
-            alert('게시글이 등록되었습니다.');
-            navigate('/board');
+            if (isEditMode && postId) {
+                // 수정 API 호출
+                await axios.put(`${API_URL}/post/${postId}`, {
+                    categoryId: selectedCategory,
+                    title: title,
+                    content: content
+                }, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    }
+                });
+                
+                alert('게시글이 수정되었습니다.');
+                navigate(`/board/${postId}`);
+            } else {
+                // 등록 API 호출
+                const response = await axios.post(`${API_URL}/post`, {
+                    categoryId: selectedCategory,
+                    title: title,
+                    content: content
+                }, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    }
+                });
+                
+                alert('게시글이 등록되었습니다.');
+                navigate('/board');
+            }
         } catch (err: any) {
-            console.error('게시글 등록 중 오류:', err);
-            setError(err.response?.data?.message || '게시글 등록에 실패했습니다.');
+            console.error('게시글 저장 중 오류:', err);
+            setError(err.response?.data?.message || '게시글 저장에 실패했습니다.');
         } finally {
             setLoading(false);
         }
@@ -246,7 +288,7 @@ const BoardWrite: React.FC = () => {
         formData.append('file', file);
 
         try {
-            const response = await axios.post(`${API_URL}/post/upload`, formData, {
+            const response = await axios.post(`${API_URL}/upload`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`
@@ -259,7 +301,6 @@ const BoardWrite: React.FC = () => {
 
             if (fileType === 'image') {
                 // 이미지 삽입
-                applyMarkdown('image');
                 const textarea = document.getElementById('content') as HTMLTextAreaElement;
                 const insertText = `![${file.name}](${fileUrl})`;
                 const cursorPos = textarea.selectionStart;
@@ -309,10 +350,21 @@ const BoardWrite: React.FC = () => {
         }
     };
 
+    // 데이터 로딩 중 표시
+    if (fetchLoading) {
+        return (
+            <div className="min-h-screen bg-base-100 flex items-center justify-center">
+                <div className="loading loading-spinner loading-lg"></div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-base-100">
             <div className="container mx-auto px-4 py-8">
-                <h1 className="text-2xl font-bold mb-6 text-base-content">새 게시글 작성하기</h1>
+                <h1 className="text-2xl font-bold mb-6 text-base-content">
+                    {isEditMode ? '게시글 수정하기' : '새 게시글 작성하기'}
+                </h1>
 
                 <div className="flex flex-col lg:flex-row gap-6">
                     {/* 왼쪽 글쓰기 영역 */}
@@ -501,77 +553,11 @@ const BoardWrite: React.FC = () => {
                                         ></textarea>
                                     </div>
                                 ) : (
-                                    <div className="p-4 min-h-[300px] bg-base-100 overflow-auto">
+                                    <div className="p-4 min-h-[300px] bg-base-100 prose max-w-none">
                                         {content ? (
-                                            <div className="markdown-preview prose prose-sm md:prose lg:prose-lg max-w-none">
-                                                <ReactMarkdown
-                                                    remarkPlugins={[remarkGfm]}
-                                                    rehypePlugins={[rehypeRaw]}
-                                                    components={{
-                                                        // @ts-ignore TypeScript 타입 오류 무시
-                                                        code({ node, inline, className, children, ...props }) {
-                                                            const match = /language-(\w+)/.exec(className || '');
-                                                            return !inline && match ? (
-                                                                <SyntaxHighlighter
-                                                                    // @ts-ignore TypeScript 타입 오류 무시
-                                                                    style={vscDarkPlus}
-                                                                    language={match[1]}
-                                                                    PreTag="div"
-                                                                    {...props}
-                                                                >
-                                                                    {String(children).replace(/\n$/, '')}
-                                                                </SyntaxHighlighter>
-                                                            ) : (
-                                                                <code className={className} {...props}>
-                                                                    {children}
-                                                                </code>
-                                                            );
-                                                        },
-                                                        // 테이블 렌더링 개선
-                                                        table: ({ node, ...props }) => (
-                                                            <div className="overflow-x-auto my-4">
-                                                                <table className="table-auto border-collapse border border-base-300 w-full" {...props} />
-                                                            </div>
-                                                        ),
-                                                        th: ({ node, ...props }) => (
-                                                            <th className="border border-base-300 px-4 py-2 bg-base-200 font-medium" {...props} />
-                                                        ),
-                                                        td: ({ node, ...props }) => (
-                                                            <td className="border border-base-300 px-4 py-2" {...props} />
-                                                        ),
-                                                        // 링크 스타일
-                                                        a: ({ node, ...props }) => (
-                                                            <a className="text-primary hover:underline" target="_blank" rel="noopener noreferrer" {...props} />
-                                                        ),
-                                                        // 이미지 스타일
-                                                        img: ({ node, ...props }) => (
-                                                            <img className="max-w-full my-4 rounded-md" {...props} />
-                                                        ),
-                                                        // 헤더 스타일
-                                                        h1: ({ node, ...props }) => (
-                                                            <h1 className="text-2xl font-bold mt-6 mb-4" {...props} />
-                                                        ),
-                                                        h2: ({ node, ...props }) => (
-                                                            <h2 className="text-xl font-bold mt-5 mb-3" {...props} />
-                                                        ),
-                                                        h3: ({ node, ...props }) => (
-                                                            <h3 className="text-lg font-bold mt-4 mb-2" {...props} />
-                                                        ),
-                                                        // 리스트 스타일
-                                                        ul: ({ node, ...props }) => (
-                                                            <ul className="list-disc pl-6 my-4" {...props} />
-                                                        ),
-                                                        ol: ({ node, ...props }) => (
-                                                            <ol className="list-decimal pl-6 my-4" {...props} />
-                                                        ),
-                                                        // 인용구 스타일
-                                                        blockquote: ({ node, ...props }) => (
-                                                            <blockquote className="border-l-4 border-gray-300 pl-4 py-2 my-4 bg-gray-50/10" {...props} />
-                                                        ),
-                                                    }}
-                                                >
-                                                    {content}
-                                                </ReactMarkdown>
+                                            <div className="markdown-preview">
+                                                {/* 실제 구현에서는 마크다운 변환 라이브러리 사용 (예: react-markdown) */}
+                                                <div className="whitespace-pre-wrap">{content}</div>
                                             </div>
                                         ) : (
                                             <div className="text-base-content/50 italic">아직 작성된 내용이 없습니다.</div>
@@ -596,7 +582,7 @@ const BoardWrite: React.FC = () => {
                                 <button
                                     type="button"
                                     className="btn btn-outline mr-2"
-                                    onClick={() => navigate('/board')}
+                                    onClick={() => isEditMode ? navigate(`/board/${postId}`) : navigate('/board')}
                                     disabled={loading}
                                 >
                                     취소
@@ -606,7 +592,7 @@ const BoardWrite: React.FC = () => {
                                     className={`btn btn-primary ${loading ? 'loading' : ''}`}
                                     disabled={loading}
                                 >
-                                    {loading ? '저장 중...' : '게시글 저장'}
+                                    {loading ? '저장 중...' : isEditMode ? '게시글 수정' : '게시글 저장'}
                                 </button>
                             </div>
                         </form>
@@ -682,8 +668,8 @@ const BoardWrite: React.FC = () => {
                                     {category.icon}
                                 </div>
                                 <div>
-                                    <h4 className="font-medium text-base-content">{category.name}</h4>
-                                    <p className="text-sm text-base-content/70">{category.description}</p>
+                                    <h4 className="font-medium">{category.name}</h4>
+                                    <p className="text-sm text-base-content/50">{category.description}</p>
                                 </div>
                                 {selectedCategory === category.id && (
                                     <div className="ml-auto">
@@ -704,4 +690,4 @@ const BoardWrite: React.FC = () => {
     );
 };
 
-export default BoardWrite;
+export default BoardEdit;

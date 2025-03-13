@@ -9,6 +9,8 @@ import OAuth2Redirect from './components/auth/OAuth2Redirect';
 import NavigationBar from "./components/common/NavigationBar"; 
 import Board from "./pages/board/Board"; 
 import BoardWrite from "./pages/board/BoardWrite";
+import BoardDetail from "./pages/board/BoardDetail";
+import BoardEdit from "./pages/board/BoardEdit";
 
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -31,9 +33,9 @@ interface ProtectedRouteProps {
     }
     
     // 인증되지 않았다면 로그인 페이지로 리디렉션
-    {/*if (!isAuthenticated) {
+    if (!isAuthenticated) {
       return <Navigate to="/login" replace />;
-    }*/}
+    }
     
     return <>{children}</>;
   };
@@ -115,6 +117,28 @@ const App: React.FC = () => {
                                 <ProtectedRoute>
                                     <DefaultLayout>
                                         <BoardWrite />
+                                    </DefaultLayout>
+                                </ProtectedRoute>
+                            } 
+                        />
+
+                        {/* 게시글 상세 페이지 */}
+                        <Route 
+                            path="/board/:postId" 
+                            element={
+                                <DefaultLayout>
+                                    <BoardDetail />
+                                </DefaultLayout>
+                            } 
+                        />
+
+                        {/* 게시글 수정 페이지 */}
+                        <Route 
+                            path="/board/edit/:postId" 
+                            element={
+                                <ProtectedRoute>
+                                    <DefaultLayout>
+                                        <BoardEdit />
                                     </DefaultLayout>
                                 </ProtectedRoute>
                             } 

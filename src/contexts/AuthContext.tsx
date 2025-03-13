@@ -299,17 +299,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             async (error: AxiosError) => {
                 const originalRequest = error.config;
 
-                // 인증 오류 (401) 처리
+                // 인증 오류 (401) 처리를 수정
                 if (error.response?.status === 401 && originalRequest && !originalRequest.headers._retry) {
                     originalRequest.headers._retry = true;
 
-                    try {
-                        // 간단히 로그아웃 처리
-                        await logout();
-                        window.location.href = '/login';
-                    } catch (refreshError) {
-                        await logout();
-                        window.location.href = '/login';
+                    // 접근 권한이 필요한 경로인지 확인
+                    const requestUrl = originalRequest.url || '';
+                    
+                    // 권한이 필요한 엔드포인트 목록
+                    const authRequiredEndpoints = [
+                        '/post/new', '/auth/me', '/post/comments'
+                        // 로그인 필수 엔드포인트 추가
+                    ];
+                    
+                    // 접근 권한이 필요한 API 요청이면 로그인 페이지로 이동
+                    const needsAuth = authRequiredEndpoints.some(endpoint => 
+                        requestUrl.includes(endpoint)
+                    );
+                    
+                    // 인증이 필요한 엔드포인트일 경우에만 로그인 페이지로 리다이렉트
+                    if (needsAuth) {
+                        try {
+                            await logout();
+                            // URL path를 확인하여 게시판 페이지에서는 리다이렉트하지 않음
+                            const currentPath = window.location.pathname;
+                            
+                            // 글쓰기 등 인증이 필요한 페이지일 경우에만 리다이렉트
+                            if (currentPath.includes('/board/new') || 
+                                currentPath.includes('/profile')) {
+                                window.location.href = '/login';
+                            }
+                        } catch (refreshError) {
+                            // 조용히 로그아웃만 처리
+                            await logout();
+                        }
                     }
                 }
 
