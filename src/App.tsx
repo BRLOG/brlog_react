@@ -11,6 +11,7 @@ import Board from "./pages/board/Board";
 import BoardWrite from "./pages/board/BoardWrite";
 import BoardDetail from "./pages/board/BoardDetail";
 import BoardEdit from "./pages/board/BoardEdit";
+import Profile from "./pages/profile/Profile";
 
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -139,6 +140,18 @@ const App: React.FC = () => {
                                 <ProtectedRoute>
                                     <DefaultLayout>
                                         <BoardEdit />
+                                    </DefaultLayout>
+                                </ProtectedRoute>
+                            } 
+                        />
+
+                        {/* 프로필 페이지 */}
+                        <Route 
+                            path="/profile" 
+                            element={
+                                <ProtectedRoute>
+                                    <DefaultLayout>
+                                        <Profile />
                                     </DefaultLayout>
                                 </ProtectedRoute>
                             } 

@@ -1,0 +1,83 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css');
+
+/* 네비게이션 컨테이너 */
+.nav-container {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+/* 메뉴 컨테이너 */
+.nav-menu-container {
+    margin: 0 1rem;
+}
+
+/* 메뉴 링크 스타일 */
+.nav-link {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    padding: 0.5rem 0.75rem;
+    position: relative;
+    transition: color 0.2s ease;
+    /*color: #4b5563;*/
+}
+
+/* 활성 메뉴 스타일 */
+.nav-link.active {
+    font-weight: 700;
+    /*color: #171717;*/
+}
+
+/* 호버 효과 - 하이라이트 배경 */
+.nav-link::before {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 8px;
+    bottom: 7px;
+    left: 50%;
+    background-color: rgba(132, 204, 22, 0.2);
+    /* BRlog 브랜드 색상, 투명도 낮게 */
+    transition: all 0.25s ease;
+    transform: translateX(-50%);
+    z-index: -1;
+    border-radius: 2px;
+}
+
+.nav-link:hover::before,
+.nav-link.active::before {
+    width: 85%;
+}
+
+/* 호버 시 색상 변경 */
+.nav-link:hover {
+    /*color: #171717;*/
+}
+
+/* 사용자 이름 스타일 */
+.user-name {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    font-weight: 600;
+}
+
+/* 로그인 버튼 스타일 */
+.login-button {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.login-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+
+/* 테마 버튼 스타일 */
+.theme-button {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    border-radius: 8px;
+}

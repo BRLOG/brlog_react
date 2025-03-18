@@ -2,7 +2,10 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext'; 
 import { useAuth } from '../../contexts/AuthContext';
-import logo_brlog from '../../assets/img/brlog3.png'; 
+//import logo_brlog from '../../assets/img/brlog_v3.png'; 
+import logo_brlog_silver from '../../assets/img/brlog_v3_silver.png'; 
+
+import './NavigationBar.css';
 
 // 테마 아이콘 선택 함수
 const getThemeIcon = (currentTheme: string, resolvedTheme: string) => {
@@ -28,19 +31,33 @@ const NavigationBar: React.FC = () => {
     };
 
     return (
-        <nav className="w-full bg-base-100 border-gray-300 shadow-md relative">
+        <nav className="w-full bg-base-100 border-gray-300 shadow-md relative nav-container">
             <div className="container mx-auto flex justify-between items-center px-6 py-4"> 
                 {/* 로고 */}
                 <div className="text-lg font-semibold">
-                    <img src={logo_brlog} alt="로고" className="h-8 w-auto"/>
+                    <img src={logo_brlog_silver} alt="로고" className="h-8 w-auto"/>
                 </div>
 
                 {/* 메뉴 */}
-                <div className="flex space-x-24 text-base">
-                
-                    <Link to="/" className={`hover:text-base-content transition-colors ${ location.pathname === '/' ? 'text-base-content font-semibold' : 'text-base-content/45' }`}>Home</Link>
-                    <Link to="/board" className={`hover:text-base-content transition-colors ${ location.pathname.startsWith('/board') ? 'text-base-content font-semibold' : 'text-base-content/45' }`}>게시판</Link>
-                    <Link to="#" className="text-base-content hover:text-accent-content transition-colors">BR</Link>
+                <div className="flex space-x-24 text-base nav-menu-container">
+                    <Link 
+                        to="/" 
+                        className={`nav-link ${location.pathname === '/' ? 'active text-base-content' : 'text-base-content/50'}`}
+                    >
+                        Home
+                    </Link>
+                    <Link 
+                        to="/board" 
+                        className={`nav-link ${location.pathname.startsWith('/board') ? 'active text-base-content' : 'text-base-content/50'}`}
+                    >
+                        게시판
+                    </Link>
+                    <Link 
+                        to="#" 
+                        className="nav-link text-base-content/50"
+                    >
+                        BR
+                    </Link>
                 </div>
 
                 {/* 오른쪽 영역: 로그인/사용자 메뉴 + 테마 변경 */}
@@ -66,24 +83,24 @@ const NavigationBar: React.FC = () => {
                                         </div>
                                     )}
                                 </div>
-                                <span className="hidden md:inline">{user?.userNm || '사용자'}</span>
+                                <span className="hidden md:inline user-name">{user?.userNm || '사용자'}</span>
                             </label>
-                            <ul tabIndex={0} className="mt-3 z-50 p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52 border border-base-300">
-                                <li>
+                            <ul tabIndex={0} className="mt-3 z-50 p-2 shadow menu menu-sm dropdown-content bg-base-content rounded-box w-52 border border-base-300">
+                                <li className="p-2">
                                     <Link to="/profile" className="justify-between">
                                         내 프로필
                                         <span className="badge badge-primary badge-sm">New</span>
                                     </Link>
                                 </li>
-                                <li><Link to="/settings">설정</Link></li>
-                                <li><button onClick={handleLogout}>로그아웃</button></li>
+                                
+                                <li className="p-2"><button className="bg-base-content text-base-300" onClick={handleLogout}>로그아웃</button></li>
                             </ul>
                         </div>
                     ) : (
                         // 로그인되지 않은 경우 - 로그인 버튼
                         <Link 
                             to="/login" 
-                            className="btn btn-outline hover:bg-base-200 transition-colors"
+                            className="btn btn-outline hover:bg-base-200 transition-colors login-button"
                         >
                             로그인
                         </Link>
@@ -91,7 +108,7 @@ const NavigationBar: React.FC = () => {
                 
                     {/* 테마 변경 드롭다운 */}
                     <div className="dropdown dropdown-end relative">
-                        <label tabIndex={0} className="btn btn-outline">
+                        <label tabIndex={0} className="btn btn-outline theme-button">
                             {getThemeIcon(theme, resolvedTheme)} Theme
                         </label>
                         <ul 

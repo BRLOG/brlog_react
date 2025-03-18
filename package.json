@@ -18,6 +18,7 @@
     "@tiptap/react": "^2.11.5",
     "@tiptap/starter-kit": "^2.11.5",
     "axios": "^1.8.2",
+    "colorthief": "^2.6.0",
     "daisyui": "^4.12.23",
     "lowlight": "^3.3.0",
     "react": "^19.0.0",

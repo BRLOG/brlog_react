@@ -69,6 +69,11 @@ interface Category {
     color: string;
 }
 
+// 현재 시간을 ISO 문자열 형식으로 반환하는 함수
+const getCurrentTimeISO = (): string => {
+    return new Date().toISOString();
+};
+
 const BoardDetail: React.FC = () => {
     const { postId } = useParams<{ postId: string }>();
     const navigate = useNavigate();
@@ -83,6 +88,16 @@ const BoardDetail: React.FC = () => {
     const [commentLoading, setCommentLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [isLiked, setIsLiked] = useState<boolean>(false);
+
+    // 댓글 새로고침 함수
+    const refreshComments = async () => {
+        try {
+            const commentResponse = await axios.get(`${API_URL}/post/${postId}/comments`);
+            setComments(commentResponse.data.data || []);
+        } catch (err) {
+            console.error('댓글 새로고침 오류:', err);
+        }
+    };
 
     // 게시글 및 댓글 가져오기
     useEffect(() => {
@@ -216,8 +231,17 @@ const BoardDetail: React.FC = () => {
                 }
             });
 
-            // 새 댓글 추가
-            const newComment = response.data.data;
+            // 새 댓글 추가 (클라이언트에서 필요한 정보 보충)
+            const currentTime = getCurrentTimeISO();
+            const newComment: Comment = {
+                ...response.data.data,
+                userNm: user?.userNm || '익명',
+                profileImgUrl: user?.profileImgUrl,
+                regDt: response.data.data.regDt || currentTime,
+                modDt: response.data.data.modDt || currentTime
+            };
+
+            // 새 댓글을 포함한 업데이트된 댓글 목록 설정
             setComments([...comments, newComment]);
             setCommentText('');
 
@@ -228,9 +252,14 @@ const BoardDetail: React.FC = () => {
                     commentCnt: post.commentCnt + 1
                 });
             }
+
+            // 서버에서 최신 댓글 목록 다시 가져오기 (선택사항)
+            // await refreshComments();
         } catch (err) {
             console.error('댓글 등록 오류:', err);
             alert('댓글 등록에 실패했습니다.');
+            // 오류 발생 시 최신 댓글 목록 다시 가져오기
+            await refreshComments();
         } finally {
             setCommentLoading(false);
         }

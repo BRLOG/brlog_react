@@ -1,19 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-// 임시 로고 아이콘들
+// 임시 로고 아이콘들 (폴백용으로만 사용)
 import nvidiaLogo from '../../assets/img/logo/nvidia-logo.png';
 import palantirLogo from '../../assets/img/logo/palantir-logo.png';
 import appleLogo from '../../assets/img/logo/apple-logo.png';
 import cocacolaLogo from '../../assets/img/logo/cocacola-logo.png';
 import berkshireLogo from '../../assets/img/logo/berkshireHathaway-logo.png';
-
 import microsoftLogo from '../../assets/img/logo/microsoft-logo.png';
 import amazonLogo from '../../assets/img/logo/amazon-logo.png';
 import googleLoco from '../../assets/img/logo/google-logo.png';
 import microStrategyLogo from '../../assets/img/logo/microStrategy-logo.png';
 import netflixLogo from '../../assets/img/logo/netflix-logo.png';
-
 import teslaLogo from '../../assets/img/logo/tesla-logo.png';
 import metaLogo from '../../assets/img/logo/meta-logo.png';
 import oracleLogo from '../../assets/img/logo/oracle-logo.png';
@@ -23,7 +21,7 @@ import walmartLogo from '../../assets/img/logo/walmart-logo.png';
 // API 기본 URL
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8090';
 
-// 로고 매핑 함수 (게시글 ID에 따라 로고 할당)
+// 로고 매핑 함수 (이미지가 없을 때 대체용)
 const getLogoByIndex = (index: number) => {
     const logos = [
         nvidiaLogo, palantirLogo, appleLogo, cocacolaLogo, berkshireLogo,
@@ -85,8 +83,60 @@ interface CategorySectionProps {
     cards: Card[];
 }
 
+// 게시글에서 첫 번째 이미지 URL 추출 함수
+const extractFirstImageUrl = (content: string): string | null => {
+    // HTML 이미지 태그에서 src 추출 (예: <img src="http://example.com/image.jpg" />)
+    const htmlImgMatch = content.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/i);
+    if (htmlImgMatch && htmlImgMatch[1]) {
+        return htmlImgMatch[1];
+    }
+    
+    // 마크다운 이미지 형식에서 URL 추출 (예: ![alt text](http://example.com/image.jpg))
+    const markdownImgMatch = content.match(/!\[.*?\]\((.*?)\)/i);
+    if (markdownImgMatch && markdownImgMatch[1]) {
+        return markdownImgMatch[1];
+    }
+    
+    // 직접 URL 형식에서 이미지 파일 확장자 추출
+    const urlMatch = content.match(/(https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp))/i);
+    if (urlMatch && urlMatch[1]) {
+        return urlMatch[1];
+    }
+    
+    return null;
+};
+
+// 마크다운 및 HTML 태그를 일반 텍스트로 변환하는 함수
+const convertMarkdownToText = (markdown: string): string => {
+    // HTML 태그 제거
+    let text = markdown.replace(/<[^>]*>/g, '');
+    
+    // 마크다운 이미지 및 링크 제거
+    text = text.replace(/!\[.*?\]\(.*?\)/g, ''); // 이미지 제거
+    text = text.replace(/\[([^\]]+)\]\(.*?\)/g, '$1'); // 링크는 텍스트만 유지
+    
+    // 헤더 기호(#) 제거
+    text = text.replace(/^#+\s*/gm, '');
+    
+    // 볼드, 이탤릭 기호 제거
+    text = text.replace(/(\*\*|__)(.*?)\1/g, '$2');
+    text = text.replace(/(\*|_)(.*?)\1/g, '$2');
+    
+    // 코드 블록 및 인라인 코드 제거
+    text = text.replace(/```[\s\S]*?```/g, '');
+    text = text.replace(/`([^`]+)`/g, '$1');
+    
+    // 여러 줄 바꿈 정리
+    text = text.replace(/\n{3,}/g, '\n\n');
+    
+    return text.trim();
+};
+
 // 개별 카드 컴포넌트
 const Card: React.FC<CardProps> = ({ title, description, image, tag, postId, onClick }) => {
+
+    const isCustomImage = !image.includes('logo/'); // 로고 폴더의 이미지가 아닌 경우 (사용자 업로드 이미지로 판단)
+
     // 게시글 상세 페이지로 이동하는 함수
     const handleCardClick = () => {
         if (postId && onClick) {
@@ -99,9 +149,36 @@ const Card: React.FC<CardProps> = ({ title, description, image, tag, postId, onC
             className="bg-base-300 flex-shrink-0 w-full sm:w-[calc(100%/3-16px)] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer"
             onClick={handleCardClick}
         >
-            <div className="h-48 overflow-hidden flex justify-center">
-                <img src={image} alt={title} className="h-full transition-transform duration-500 hover:scale-105" />
-            </div>
+            {isCustomImage ? (
+                // 사용자 업로드 이미지인 경우 - 전체 영역 채우기
+                <div className="h-48 overflow-hidden flex justify-center">
+                    <img 
+                        src={image} 
+                        alt={title} 
+                        className="h-full w-full transition-transform duration-500 hover:scale-105" 
+                        onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.onerror = null; // 무한 루프 방지
+                            target.src = getLogoByIndex(postId || 0);
+                        }}
+                    />
+                </div>
+            ) : (
+                // 기업 로고인 경우 - 패딩 적용 및 비율 유지
+                <div className="h-48 overflow-hidden flex justify-center p-4">
+                    <img 
+                        src={image} 
+                        alt={title} 
+                        className="max-h-full max-w-full object-contain transition-transform duration-500 hover:scale-105" 
+                        onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.onerror = null; // 무한 루프 방지
+                            target.src = getLogoByIndex(postId || 0);
+                        }}
+                    />
+                </div>
+            )}
+            
             <div className="p-5">
                 <span className="inline-block px-3 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full mb-2">
                     {tag}
@@ -326,13 +403,15 @@ const CategoryCardLayout: React.FC = () => {
     const [categoryData, setCategoryData] = useState<CategoryData[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-
+    
     // 카테고리 및 게시글 데이터 로드
     useEffect(() => {
         const fetchCategoriesAndPosts = async () => {
             try {
                 setLoading(true);
                 
+                let cnt = 0;
+
                 // 카테고리 목록 가져오기
                 const categoriesResponse = await axios.get(`${API_URL}/post/categories`);
                 const fetchedCategories: Category[] = categoriesResponse.data.data;
@@ -361,13 +440,23 @@ const CategoryCardLayout: React.FC = () => {
                     }
                     
                     // 게시글을 카드 형식으로 변환
-                    const cards: Card[] = posts.map((post, index) => ({
-                        title: post.title,
-                        description: truncateContent(post.content, 100),
-                        image: getLogoByIndex(index),
-                        tag: post.userNm || "익명",
-                        postId: post.postId
-                    }));
+                    
+                    const cards: Card[] = posts.map((post, index) => {
+                        // 게시글 내용에서 이미지 URL 추출
+                        const imageUrl = extractFirstImageUrl(post.content);
+                        
+                        return {
+                            title: post.title,
+                            // 마크다운을 텍스트로 변환하여 표시
+                            description: truncateContent(convertMarkdownToText(post.content), 100),
+                            // 이미지가 있으면 사용, 없으면 기본 로고 사용
+                            image: imageUrl || getLogoByIndex(cnt++),
+                            //image: imageUrl || targetCard[index].map(v => v.image),
+                            
+                            tag: post.userNm || "익명",
+                            postId: post.postId
+                        };
+                    });
                     
                     return {
                         title: category.name,
@@ -404,13 +493,10 @@ const CategoryCardLayout: React.FC = () => {
     
     // 게시글 내용 길이 제한 함수
     const truncateContent = (content: string, maxLength: number): string => {
-        // HTML 태그 제거
-        const textContent = content.replace(/<[^>]*>/g, '');
-        
-        if (textContent.length <= maxLength) return textContent;
+        if (content.length <= maxLength) return content;
         
         // 최대 길이로 자르고 말줄임표 추가
-        return textContent.substring(0, maxLength) + '...';
+        return content.substring(0, maxLength) + '...';
     };
 
     // 로딩 중 표시

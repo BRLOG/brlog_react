@@ -1,7 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import axios from 'axios';
+import ReactMarkdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 import { 
     HiOutlineGlobe,
     HiOutlineQuestionMarkCircle,
@@ -28,6 +33,25 @@ import {
 // API 기본 URL
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8090';
 
+// 파일 업로드 관련 상수
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const ALLOWED_FILE_TYPES = [
+    ...ALLOWED_IMAGE_TYPES,
+    'application/pdf', 
+    'application/msword', 
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // docx
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // xlsx
+    'text/plain'
+];
+
+// 업로드 상태 인터페이스
+interface UploadState {
+    isUploading: boolean;
+    progress: number;
+}
+
 // 카테고리 인터페이스
 interface Category {
     id: string;
@@ -42,6 +66,7 @@ const BoardEdit: React.FC = () => {
     const { postId } = useParams<{ postId: string }>();
     const { isAuthenticated, user } = useAuth();
     const isEditMode = Boolean(postId);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // 상태 관리
     const [selectedCategory, setSelectedCategory] = useState<string>('general');
@@ -53,6 +78,10 @@ const BoardEdit: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [categories, setCategories] = useState<Category[]>([]);
     const [originalUserId, setOriginalUserId] = useState<string>('');
+    const [uploadState, setUploadState] = useState<UploadState>({
+        isUploading: false,
+        progress: 0
+    });
 
     // 인증 상태 확인 및 리디렉션
     useEffect(() => {
@@ -280,49 +309,139 @@ const BoardEdit: React.FC = () => {
         }, 0);
     };
 
+    // 파일 선택 다이얼로그를 표시하는 함수
+    const showFileSelector = () => {
+        fileInputRef.current?.click();
+    };
+
+    // 파일 선택 이벤트 핸들러
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (files && files.length > 0) {
+            handleFileUpload(files[0]);
+        }
+        
+        // 파일 선택 후 input을 초기화 (같은 파일을 다시 선택할 수 있도록)
+        if (e.target) {
+            e.target.value = '';
+        }
+    };
+
+    // 이미지 툴바 버튼 클릭 핸들러
+    const handleImageButtonClick = () => {
+        // 파일 선택기 다이얼로그 표시
+        showFileSelector();
+    };
+
     // 파일 업로드 처리
     const handleFileUpload = async (file: File) => {
         if (!file) return;
+
+        // 파일 유효성 검사
+        if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+            setError('지원하지 않는 파일 형식입니다.');
+            return;
+        }
+
+        if (file.size > MAX_FILE_SIZE) {
+            setError(`파일 크기는 ${MAX_FILE_SIZE / (1024 * 1024)}MB를 초과할 수 없습니다.`);
+            return;
+        }
+
+        // 업로드 상태 초기화
+        setUploadState({
+            isUploading: true,
+            progress: 0
+        });
+        
+        setError(null);
 
         const formData = new FormData();
         formData.append('file', file);
 
         try {
-            const response = await axios.post(`${API_URL}/upload`, formData, {
+            const response = await axios.post(`${API_URL}/file/upload`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                },
+                onUploadProgress: (progressEvent) => {
+                    // 업로드 진행률 계산
+                    const percentage = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1));
+                    
+                    // 업로드 상태 업데이트
+                    setUploadState({
+                        isUploading: true,
+                        progress: percentage
+                    });
                 }
+            });
+
+            // 업로드가 완료되면 진행 상태 리셋
+            setUploadState({
+                isUploading: false,
+                progress: 0
             });
 
             // 업로드된 파일 URL을 에디터에 삽입
             const fileUrl = response.data.data.fileUrl;
             const fileType = file.type.startsWith('image/') ? 'image' : 'file';
+            
+            // 파일명에 특수문자가 있으면 제거 (마크다운 문법과 충돌 방지)
+            const safeFileName = file.name.replace(/[[\]()]/g, '');
+
+            // 텍스트 에디터에 파일 링크 삽입
+            const textarea = document.getElementById('content') as HTMLTextAreaElement;
+            if (!textarea) return;
+            
+            const cursorPos = textarea.selectionStart;
+            let insertText = '';
 
             if (fileType === 'image') {
-                // 이미지 삽입
-                const textarea = document.getElementById('content') as HTMLTextAreaElement;
-                const insertText = `![${file.name}](${fileUrl})`;
-                const cursorPos = textarea.selectionStart;
-                setContent(
-                    textarea.value.substring(0, cursorPos) + 
-                    insertText + 
-                    textarea.value.substring(cursorPos)
-                );
+                insertText = `![${safeFileName}](${fileUrl})`;
             } else {
-                // 파일 링크 삽입
-                const insertText = `[${file.name}](${fileUrl})`;
-                const textarea = document.getElementById('content') as HTMLTextAreaElement;
-                const cursorPos = textarea.selectionStart;
-                setContent(
-                    textarea.value.substring(0, cursorPos) + 
-                    insertText + 
-                    textarea.value.substring(cursorPos)
-                );
+                insertText = `[${safeFileName}](${fileUrl})`;
             }
-        } catch (err) {
+
+            // 콘텐츠에 파일 링크 삽입
+            const newContent = 
+                textarea.value.substring(0, cursorPos) + 
+                insertText + 
+                textarea.value.substring(cursorPos);
+            
+            setContent(newContent);
+            
+            // 커서 위치 재설정 (텍스트 삽입 후 커서를 삽입된 텍스트 뒤로 이동)
+            setTimeout(() => {
+                textarea.focus();
+                const newCursorPos = cursorPos + insertText.length;
+                textarea.setSelectionRange(newCursorPos, newCursorPos);
+            }, 0);
+        } catch (err: any) {
             console.error('파일 업로드 오류:', err);
-            setError('파일 업로드에 실패했습니다.');
+            
+            // 상세 오류 메시지 표시
+            if (err.response) {
+                // 서버에서 응답이 온 경우
+                if (err.response.status === 413) {
+                    setError('파일 크기가 서버 제한을 초과했습니다.');
+                } else if (err.response.status === 401) {
+                    setError('인증이 필요합니다. 다시 로그인해주세요.');
+                } else {
+                    setError(err.response.data?.message || '파일 업로드에 실패했습니다.');
+                }
+            } else if (err.request) {
+                // 요청은 보냈지만 응답이 없는 경우
+                setError('서버에 연결할 수 없습니다. 네트워크 상태를 확인해주세요.');
+            } else {
+                setError('파일 업로드 중 오류가 발생했습니다.');
+            }
+        } finally {
+            // 업로드 상태 초기화
+            setUploadState({
+                isUploading: false,
+                progress: 0
+            });
         }
     };
 
@@ -344,7 +463,9 @@ const BoardEdit: React.FC = () => {
             if (items[i].type.indexOf('image') !== -1) {
                 const file = items[i].getAsFile();
                 if (file) {
+                    e.preventDefault(); // 이미지 붙여넣기의 경우 기본 동작 방지
                     handleFileUpload(file);
+                    break;
                 }
             }
         }
@@ -370,6 +491,15 @@ const BoardEdit: React.FC = () => {
                     {/* 왼쪽 글쓰기 영역 */}
                     <div className="w-full lg:w-3/4">
                         <form onSubmit={handleSubmit}>
+                            {/* 숨겨진 파일 입력 요소 */}
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                className="hidden"
+                                onChange={handleFileSelect}
+                                accept={ALLOWED_FILE_TYPES.join(',')}
+                            />
+                            
                             {/* 오류 메시지 표시 */}
                             {error && (
                                 <div className="alert alert-error mb-4">
@@ -522,8 +652,8 @@ const BoardEdit: React.FC = () => {
                                             <button
                                                 type="button"
                                                 className="p-2 rounded hover:bg-base-200"
-                                                title="이미지"
-                                                onClick={() => applyMarkdown('image')}
+                                                title="이미지 업로드"
+                                                onClick={handleImageButtonClick}
                                                 disabled={loading}
                                             >
                                                 <RiImage2Line className="w-4 h-4" />
@@ -540,24 +670,118 @@ const BoardEdit: React.FC = () => {
                                         </div>
 
                                         {/* 텍스트 에어리어 */}
-                                        <textarea
-                                            id="content"
-                                            className="w-full p-4 min-h-[300px] bg-base-100 text-base-content resize-y focus:outline-none"
-                                            placeholder="내용을 작성하세요..."
-                                            value={content}
-                                            onChange={(e) => setContent(e.target.value)}
-                                            onDrop={handleDrop}
-                                            onPaste={handlePaste}
-                                            required
-                                            disabled={loading}
-                                        ></textarea>
+                                        <div className="relative">
+                                            <textarea
+                                                id="content"
+                                                className="w-full p-4 min-h-[300px] bg-base-100 text-base-content resize-y focus:outline-none"
+                                                placeholder="내용을 작성하거나 파일을 드래그하세요..."
+                                                value={content}
+                                                onChange={(e) => setContent(e.target.value)}
+                                                onDrop={handleDrop}
+                                                onPaste={handlePaste}
+                                                required
+                                                disabled={loading}
+                                            ></textarea>
+                                            
+                                            {/* 드래그 앤 드롭 안내 (콘텐츠가 비어있을 때만 표시) */}
+                                            {!content && (
+                                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-30">
+                                                    <div className="text-center">
+                                                        <RiImage2Line className="w-10 h-10 mx-auto mb-2" />
+                                                        <p>이미지나 파일을 여기에 드래그하세요</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        
+                                        {/* 업로드 상태 표시 */}
+                                        {uploadState.isUploading && (
+                                            <div className="mt-2 p-2 bg-base-200 rounded-lg">
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <span className="text-sm text-base-content/70">파일 업로드 중...</span>
+                                                    <span className="text-sm font-medium">{uploadState.progress}%</span>
+                                                </div>
+                                                <div className="w-full bg-base-300 rounded-full h-2.5">
+                                                    <div 
+                                                        className="bg-primary h-2.5 rounded-full" 
+                                                        style={{ width: `${uploadState.progress}%` }}
+                                                    ></div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 ) : (
-                                    <div className="p-4 min-h-[300px] bg-base-100 prose max-w-none">
+                                    <div className="p-4 min-h-[300px] bg-base-100 overflow-auto">
                                         {content ? (
-                                            <div className="markdown-preview">
-                                                {/* 실제 구현에서는 마크다운 변환 라이브러리 사용 (예: react-markdown) */}
-                                                <div className="whitespace-pre-wrap">{content}</div>
+                                            <div className="markdown-preview prose prose-sm md:prose lg:prose-lg max-w-none">
+                                                <ReactMarkdown
+                                                    remarkPlugins={[remarkGfm]}
+                                                    rehypePlugins={[rehypeRaw]}
+                                                    components={{
+                                                        // @ts-ignore TypeScript 타입 오류 무시
+                                                        code({ node, inline, className, children, ...props }) {
+                                                            const match = /language-(\w+)/.exec(className || '');
+                                                            return !inline && match ? (
+                                                                <SyntaxHighlighter
+                                                                    // @ts-ignore TypeScript 타입 오류 무시
+                                                                    style={vscDarkPlus}
+                                                                    language={match[1]}
+                                                                    PreTag="div"
+                                                                    {...props}
+                                                                >
+                                                                    {String(children).replace(/\n$/, '')}
+                                                                </SyntaxHighlighter>
+                                                            ) : (
+                                                                <code className={className} {...props}>
+                                                                    {children}
+                                                                </code>
+                                                            );
+                                                        },
+                                                        // 테이블 렌더링 개선
+                                                        table: ({ node, ...props }) => (
+                                                            <div className="overflow-x-auto my-4">
+                                                                <table className="table-auto border-collapse border border-base-300 w-full" {...props} />
+                                                            </div>
+                                                        ),
+                                                        th: ({ node, ...props }) => (
+                                                            <th className="border border-base-300 px-4 py-2 bg-base-200 font-medium" {...props} />
+                                                        ),
+                                                        td: ({ node, ...props }) => (
+                                                            <td className="border border-base-300 px-4 py-2" {...props} />
+                                                        ),
+                                                        // 링크 스타일
+                                                        a: ({ node, ...props }) => (
+                                                            <a className="text-primary hover:underline" target="_blank" rel="noopener noreferrer" {...props} />
+                                                        ),
+                                                        // 이미지 스타일
+                                                        img: ({ node, ...props }) => (
+                                                            <img className="max-w-full my-4 rounded-md" {...props} />
+                                                        ),
+                                                        // 헤더 스타일
+                                                        h1: ({ node, ...props }) => (
+                                                            <h1 className="text-2xl font-bold mt-6 mb-4" {...props} />
+                                                        ),
+                                                        h2: ({ node, ...props }) => (
+                                                            <h2 className="text-xl font-bold mt-5 mb-3" {...props} />
+                                                        ),
+                                                        h3: ({ node, ...props }) => (
+                                                            <h3 className="text-lg font-bold mt-4 mb-2" {...props} />
+                                                        ),
+                                                        // 리스트 스타일
+                                                        ul: ({ node, ...props }) => (
+                                                            <ul className="list-disc pl-6 my-4" {...props} />
+                                                        ),
+                                                        ol: ({ node, ...props }) => (
+                                                            <ol className="list-decimal pl-6 my-4" {...props} />
+                                                        ),
+                                                        // 인용구 스타일
+                                                        blockquote: ({ node, ...props }) => (
+                                                            <blockquote className="border-l-4 border-gray-300 pl-4 py-2 my-4 bg-gray-50/10" {...props} />
+                                                        ),
+                                                    }}
+                                                >
+                                                    {content}
+                                                </ReactMarkdown>
                                             </div>
                                         ) : (
                                             <div className="text-base-content/50 italic">아직 작성된 내용이 없습니다.</div>

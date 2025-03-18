@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import axios from 'axios';
@@ -35,6 +35,25 @@ import {
 // API 기본 URL
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8090';
 
+// 파일 업로드 관련 상수
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const ALLOWED_FILE_TYPES = [
+    ...ALLOWED_IMAGE_TYPES,
+    'application/pdf', 
+    'application/msword', 
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // docx
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // xlsx
+    'text/plain'
+];
+
+// 업로드 상태 인터페이스
+interface UploadState {
+    isUploading: boolean;
+    progress: number;
+}
+
 // 카테고리 인터페이스
 interface Category {
     id: string;
@@ -47,6 +66,7 @@ interface Category {
 const BoardWrite: React.FC = () => {
     const navigate = useNavigate();
     const { isAuthenticated, user } = useAuth(); // 인증 상태 가져오기
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // 상태 관리
     const [selectedCategory, setSelectedCategory] = useState<string>('development');
@@ -56,6 +76,10 @@ const BoardWrite: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [categories, setCategories] = useState<Category[]>([]);
+    const [uploadState, setUploadState] = useState<UploadState>({
+        isUploading: false,
+        progress: 0
+    });
 
     // 인증 상태 확인 및 리디렉션
     useEffect(() => {
@@ -78,8 +102,6 @@ const BoardWrite: React.FC = () => {
 
                 console.log('categoriesData?: ', categoriesData)
                 setCategories(categoriesData);
-
-
             } catch (error) {
                 console.error('카테고리 로딩 중 오류:', error);
                 setError('카테고리를 불러오는 중 오류가 발생했습니다.');
@@ -114,8 +136,6 @@ const BoardWrite: React.FC = () => {
     };
 
     // 선택된 카테고리
-    console.log('categories?: ', categories)
-    // 기본 카테고리 설정
     const defaultCategory = {
         id: 'development',
         name: '개발',
@@ -238,50 +258,141 @@ const BoardWrite: React.FC = () => {
         }, 0);
     };
 
+    // 파일 선택 다이얼로그를 표시하는 함수
+    const showFileSelector = () => {
+        fileInputRef.current?.click();
+    };
+
+    // 파일 선택 이벤트 핸들러
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (files && files.length > 0) {
+            handleFileUpload(files[0]);
+        }
+        
+        // 파일 선택 후 input을 초기화 (같은 파일을 다시 선택할 수 있도록)
+        if (e.target) {
+            e.target.value = '';
+        }
+    };
+
+    // 이미지 툴바 버튼 클릭 핸들러
+    const handleImageButtonClick = () => {
+        // 파일 선택기 다이얼로그 표시
+        showFileSelector();
+    };
+
     // 파일 업로드 처리
     const handleFileUpload = async (file: File) => {
         if (!file) return;
+
+        // 파일 유효성 검사
+        if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+            setError('지원하지 않는 파일 형식입니다.');
+            return;
+        }
+
+        if (file.size > MAX_FILE_SIZE) {
+            setError(`파일 크기는 ${MAX_FILE_SIZE / (1024 * 1024)}MB를 초과할 수 없습니다.`);
+            return;
+        }
+
+        // 업로드 상태 초기화
+        setUploadState({
+            isUploading: true,
+            progress: 0
+        });
+        
+        setError(null);
 
         const formData = new FormData();
         formData.append('file', file);
 
         try {
-            const response = await axios.post(`${API_URL}/post/upload`, formData, {
+            const response = await axios.post(`${API_URL}/file/upload`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                },
+                onUploadProgress: (progressEvent) => {
+                    // 업로드 진행률 계산
+                    const percentage = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1));
+                    
+                    // 업로드 상태 업데이트
+                    setUploadState({
+                        isUploading: true,
+                        progress: percentage
+                    });
+                    
+                    console.log(`업로드 진행률: ${percentage}%`);
                 }
+            });
+
+            // 업로드가 완료되면 진행 상태 리셋
+            setUploadState({
+                isUploading: false,
+                progress: 0
             });
 
             // 업로드된 파일 URL을 에디터에 삽입
             const fileUrl = response.data.data.fileUrl;
             const fileType = file.type.startsWith('image/') ? 'image' : 'file';
+            
+            // 파일명에 특수문자가 있으면 제거 (마크다운 문법과 충돌 방지)
+            const safeFileName = file.name.replace(/[[\]()]/g, '');
+
+            // 텍스트 에디터에 파일 링크 삽입
+            const textarea = document.getElementById('content') as HTMLTextAreaElement;
+            if (!textarea) return;
+            
+            const cursorPos = textarea.selectionStart;
+            let insertText = '';
 
             if (fileType === 'image') {
-                // 이미지 삽입
-                applyMarkdown('image');
-                const textarea = document.getElementById('content') as HTMLTextAreaElement;
-                const insertText = `![${file.name}](${fileUrl})`;
-                const cursorPos = textarea.selectionStart;
-                setContent(
-                    textarea.value.substring(0, cursorPos) + 
-                    insertText + 
-                    textarea.value.substring(cursorPos)
-                );
+                insertText = `![${safeFileName}](${fileUrl})`;
             } else {
-                // 파일 링크 삽입
-                const insertText = `[${file.name}](${fileUrl})`;
-                const textarea = document.getElementById('content') as HTMLTextAreaElement;
-                const cursorPos = textarea.selectionStart;
-                setContent(
-                    textarea.value.substring(0, cursorPos) + 
-                    insertText + 
-                    textarea.value.substring(cursorPos)
-                );
+                insertText = `[${safeFileName}](${fileUrl})`;
             }
-        } catch (err) {
+
+            // 콘텐츠에 파일 링크 삽입
+            const newContent = 
+                textarea.value.substring(0, cursorPos) + 
+                insertText + 
+                textarea.value.substring(cursorPos);
+            
+            setContent(newContent);
+            
+            // 커서 위치 재설정 (텍스트 삽입 후 커서를 삽입된 텍스트 뒤로 이동)
+            setTimeout(() => {
+                textarea.focus();
+                const newCursorPos = cursorPos + insertText.length;
+                textarea.setSelectionRange(newCursorPos, newCursorPos);
+            }, 0);
+        } catch (err: any) {
             console.error('파일 업로드 오류:', err);
-            setError('파일 업로드에 실패했습니다.');
+            
+            // 상세 오류 메시지 표시
+            if (err.response) {
+                // 서버에서 응답이 온 경우
+                if (err.response.status === 413) {
+                    setError('파일 크기가 서버 제한을 초과했습니다.');
+                } else if (err.response.status === 401) {
+                    setError('인증이 필요합니다. 다시 로그인해주세요.');
+                } else {
+                    setError(err.response.data?.message || '파일 업로드에 실패했습니다.');
+                }
+            } else if (err.request) {
+                // 요청은 보냈지만 응답이 없는 경우
+                setError('서버에 연결할 수 없습니다. 네트워크 상태를 확인해주세요.');
+            } else {
+                setError('파일 업로드 중 오류가 발생했습니다.');
+            }
+        } finally {
+            // 업로드 상태 초기화
+            setUploadState({
+                isUploading: false,
+                progress: 0
+            });
         }
     };
 
@@ -303,7 +414,9 @@ const BoardWrite: React.FC = () => {
             if (items[i].type.indexOf('image') !== -1) {
                 const file = items[i].getAsFile();
                 if (file) {
+                    e.preventDefault(); // 이미지 붙여넣기의 경우 기본 동작 방지
                     handleFileUpload(file);
+                    break;
                 }
             }
         }
@@ -318,6 +431,15 @@ const BoardWrite: React.FC = () => {
                     {/* 왼쪽 글쓰기 영역 */}
                     <div className="w-full lg:w-3/4">
                         <form onSubmit={handleSubmit}>
+                            {/* 숨겨진 파일 입력 요소 */}
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                className="hidden"
+                                onChange={handleFileSelect}
+                                accept={ALLOWED_FILE_TYPES.join(',')}
+                            />
+                            
                             {/* 오류 메시지 표시 */}
                             {error && (
                                 <div className="alert alert-error mb-4">
@@ -470,8 +592,8 @@ const BoardWrite: React.FC = () => {
                                             <button
                                                 type="button"
                                                 className="p-2 rounded hover:bg-base-200"
-                                                title="이미지"
-                                                onClick={() => applyMarkdown('image')}
+                                                title="이미지 업로드"
+                                                onClick={handleImageButtonClick}
                                                 disabled={loading}
                                             >
                                                 <RiImage2Line className="w-4 h-4" />
@@ -487,18 +609,46 @@ const BoardWrite: React.FC = () => {
                                             </button>
                                         </div>
 
-                                        {/* 텍스트 에어리어 */}
-                                        <textarea
-                                            id="content"
-                                            className="w-full p-4 min-h-[300px] bg-base-100 text-base-content resize-y focus:outline-none"
-                                            placeholder="내용을 작성하세요..."
-                                            value={content}
-                                            onChange={(e) => setContent(e.target.value)}
-                                            onDrop={handleDrop}
-                                            onPaste={handlePaste}
-                                            required
-                                            disabled={loading}
-                                        ></textarea>
+                                        {/* 텍스트 에어리어 영역 */}
+                                        <div className="relative">
+                                            <textarea
+                                                id="content"
+                                                className="w-full p-4 min-h-[300px] bg-base-100 text-base-content resize-y focus:outline-none"
+                                                placeholder="내용을 작성하거나 파일을 드래그하세요..."
+                                                value={content}
+                                                onChange={(e) => setContent(e.target.value)}
+                                                onDrop={handleDrop}
+                                                onPaste={handlePaste}
+                                                required
+                                                disabled={loading}
+                                            ></textarea>
+                                            
+                                            {/* 드래그 앤 드롭 안내 (콘텐츠가 비어있을 때만 표시) */}
+                                            {!content && (
+                                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-30">
+                                                    <div className="text-center">
+                                                        <RiImage2Line className="w-10 h-10 mx-auto mb-2" />
+                                                        <p>이미지나 파일을 여기에 드래그하세요</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        
+                                        {/* 업로드 상태 표시 */}
+                                        {uploadState.isUploading && (
+                                            <div className="mt-2 p-2 bg-base-200 rounded-lg">
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <span className="text-sm text-base-content/70">파일 업로드 중...</span>
+                                                    <span className="text-sm font-medium">{uploadState.progress}%</span>
+                                                </div>
+                                                <div className="w-full bg-base-300 rounded-full h-2.5">
+                                                    <div 
+                                                        className="bg-primary h-2.5 rounded-full" 
+                                                        style={{ width: `${uploadState.progress}%` }}
+                                                    ></div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 ) : (
                                     <div className="p-4 min-h-[300px] bg-base-100 overflow-auto">

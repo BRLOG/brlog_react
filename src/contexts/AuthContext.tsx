@@ -21,6 +21,7 @@ interface AuthContextType {
     checkAuth: () => Promise<void>;
     socialLogin: (provider: string) => void;
     handleOAuth2Redirect: () => void;
+    updateUserInfo: (updatedUser: User) => void; // 사용자 정보 업데이트 함수 추가
 }
 
 // 기본 컨텍스트 값
@@ -34,6 +35,7 @@ const defaultAuthContext: AuthContextType = {
     checkAuth: async () => { },
     socialLogin: () => { },
     handleOAuth2Redirect: () => { },
+    updateUserInfo: () => { }, // 기본 함수 추가
 };
 
 // 인증 컨텍스트 생성
@@ -67,6 +69,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // 토큰을 로컬 스토리지에서 제거
     const removeToken = (): void => {
         localStorage.removeItem('authToken');
+    };
+
+    // 사용자 정보 업데이트 함수
+    const updateUserInfo = (updatedUser: User): void => {
+        setUser(updatedUser);
+        console.log("사용자 정보 업데이트:", updatedUser);
     };
 
     // 소셜 로그인 함수
@@ -368,7 +376,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         logout,
         checkAuth,
         socialLogin,
-        handleOAuth2Redirect
+        handleOAuth2Redirect,
+        updateUserInfo // 컨텍스트 값에 updateUserInfo 함수 추가
     };
 
     return (
