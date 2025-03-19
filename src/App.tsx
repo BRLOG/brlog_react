@@ -12,6 +12,7 @@ import BoardWrite from "./pages/board/BoardWrite";
 import BoardDetail from "./pages/board/BoardDetail";
 import BoardEdit from "./pages/board/BoardEdit";
 import Profile from "./pages/profile/Profile";
+import AboutMe from "./pages/about/AboutMe";
 
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -154,6 +155,16 @@ const App: React.FC = () => {
                                         <Profile />
                                     </DefaultLayout>
                                 </ProtectedRoute>
+                            } 
+                        />
+
+                        {/* BR 탭 (ABOUT ME) 페이지 */}
+                        <Route 
+                            path="/about" 
+                            element={
+                                <DefaultLayout>
+                                    <AboutMe />
+                                </DefaultLayout>
                             } 
                         />
                         

@@ -53,8 +53,8 @@ const NavigationBar: React.FC = () => {
                         게시판
                     </Link>
                     <Link 
-                        to="#" 
-                        className="nav-link text-base-content/50"
+                        to="/about"
+                        className={`nav-link ${location.pathname.startsWith('/about') ? 'active text-base-content' : 'text-base-content/50'}`}
                     >
                         BR
                     </Link>
