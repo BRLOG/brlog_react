@@ -120,6 +120,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             console.log("로그인 요청 시작:", { userId: email, userPw: '***' });
             console.log(`요청 URL: ${API_URL}/auth/login`);
 
+            console.log('VITE API URL:', import.meta.env.VITE_API_URL);
+            
             // 직접 axios 사용
             const response = await axios({
                 method: 'POST',
