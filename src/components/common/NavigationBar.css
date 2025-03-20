@@ -13,7 +13,6 @@
 /* 메뉴 링크 스타일 */
 .nav-link {
     font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-    font-size: 1rem;
     font-weight: 600;
     letter-spacing: -0.01em;
     padding: 0.5rem 0.75rem;
@@ -25,7 +24,7 @@
 /* 활성 메뉴 스타일 */
 .nav-link.active {
     font-weight: 700;
-    /*color: #171717;*/
+    color: rgba(84,119,173) !important;
 }
 
 /* 호버 효과 - 하이라이트 배경 */

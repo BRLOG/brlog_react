@@ -135,7 +135,7 @@ const convertMarkdownToText = (markdown: string): string => {
 // 개별 카드 컴포넌트
 const Card: React.FC<CardProps> = ({ title, description, image, tag, postId, onClick }) => {
 
-    const isCustomImage = !image.includes('logo/'); // 로고 폴더의 이미지가 아닌 경우 (사용자 업로드 이미지로 판단)
+    const isCustomImage = !image.includes('assets/'); // 로고 폴더의 이미지가 아닌 경우 assets/ (사용자 업로드 이미지로 판단)
 
     // 게시글 상세 페이지로 이동하는 함수
     const handleCardClick = () => {

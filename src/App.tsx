@@ -13,6 +13,7 @@ import BoardDetail from "./pages/board/BoardDetail";
 import BoardEdit from "./pages/board/BoardEdit";
 import Profile from "./pages/profile/Profile";
 import AboutMe from "./pages/about/AboutMe";
+import Lab from "./pages/lab/Lab";
 
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -66,7 +67,7 @@ const DefaultLayout: React.FC<MainLayoutProps> = ({ children }) => {
     return (
         <>
             <NavigationBar />
-            <div className="min-h-screen bg-base-100">
+            <div className="bg-base-100" style={{ height: 'calc(100vh - 80px)' }}>
                 {children}
             </div>
         </>
@@ -155,6 +156,16 @@ const App: React.FC = () => {
                                         <Profile />
                                     </DefaultLayout>
                                 </ProtectedRoute>
+                            } 
+                        />
+
+                        {/* LAB 페이지 */}
+                        <Route 
+                            path="/lab" 
+                            element={
+                                <DefaultLayout>
+                                    <Lab />
+                                </DefaultLayout>
                             } 
                         />
 

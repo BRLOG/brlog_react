@@ -42,19 +42,25 @@ const NavigationBar: React.FC = () => {
                 <div className="flex space-x-24 text-base nav-menu-container">
                     <Link 
                         to="/" 
-                        className={`nav-link ${location.pathname === '/' ? 'active text-base-content' : 'text-base-content/50'}`}
+                        className={`text-sm nav-link ${location.pathname === '/' ? 'active text-base-content' : 'text-base-content/50'}`}
                     >
-                        Home
+                        HOME
                     </Link>
                     <Link 
                         to="/board" 
-                        className={`nav-link ${location.pathname.startsWith('/board') ? 'active text-base-content' : 'text-base-content/50'}`}
+                        className={`text-sm nav-link ${location.pathname.startsWith('/board') ? 'active text-base-content' : 'text-base-content/50'}`}
                     >
-                        게시판
+                        POST
+                    </Link>
+                    <Link 
+                        to="/lab" 
+                        className={`text-sm nav-link ${location.pathname.startsWith('/lab') ? 'active text-base-content' : 'text-base-content/50'}`}
+                    >
+                        LAB
                     </Link>
                     <Link 
                         to="/about"
-                        className={`nav-link ${location.pathname.startsWith('/about') ? 'active text-base-content' : 'text-base-content/50'}`}
+                        className={`text-sm nav-link ${location.pathname.startsWith('/about') ? 'active text-base-content' : 'text-base-content/50'}`}
                     >
                         BR
                     </Link>
