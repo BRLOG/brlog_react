@@ -446,10 +446,6 @@ const BoardDetail: React.FC = () => {
                                             src={post.profileImgUrl}
                                             alt={post.userNm || '프로필'}
                                             className="w-full h-full object-cover"
-                                            onError={(e) => {
-                                                const target = e.target as HTMLImageElement;
-                                                target.src = "https://via.placeholder.com/32";
-                                            }}
                                         />
                                     ) : (
                                         <div className="w-full h-full text-xs bg-primary text-primary-content flex items-center justify-center">
@@ -617,10 +613,6 @@ const BoardDetail: React.FC = () => {
                                                     src={comment.profileImgUrl}
                                                     alt={comment.userNm || '프로필'}
                                                     className="w-full h-full object-cover"
-                                                    onError={(e) => {
-                                                        const target = e.target as HTMLImageElement;
-                                                        target.src = "https://via.placeholder.com/32";
-                                                    }}
                                                 />
                                             ) : (
                                                 <div className="w-full h-full text-xs bg-primary text-primary-content flex items-center justify-center">
@@ -670,10 +662,6 @@ const BoardDetail: React.FC = () => {
                                                 src={user.profileImgUrl}
                                                 alt={user?.userNm || '프로필'}
                                                 className="w-full h-full object-cover"
-                                                onError={(e) => {
-                                                    const target = e.target as HTMLImageElement;
-                                                    target.src = "https://via.placeholder.com/32";
-                                                }}
                                             />
                                         ) : (
                                             <div className="w-full h-full text-xs bg-primary text-primary-content flex items-center justify-center">

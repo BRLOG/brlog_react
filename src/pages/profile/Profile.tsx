@@ -79,10 +79,20 @@ const Profile: React.FC = () => {
         fileInputRef.current?.click();
     };
 
-    // 파일 선택 핸들러
+
+    // 파일 선택 핸들러에 파일 타입 확인 로직 추가
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
+            console.log("파일 타입:", file.type); // 로그로 파일 타입 확인
+            
+            // 서버에서 지원하는 이미지 형식인지 확인
+            const supportedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            if (!supportedTypes.includes(file.type)) {
+                setError("지원하지 않는 이미지 형식입니다. JPG, PNG, GIF, WEBP 형식만 사용 가능합니다.");
+                return;
+            }
+            
             setImageFile(file);
             const imageUrl = URL.createObjectURL(file);
             setProfileImage(imageUrl);
@@ -270,10 +280,6 @@ const Profile: React.FC = () => {
                                                     src={profileImage} 
                                                     alt="프로필" 
                                                     className="w-full h-full object-cover"
-                                                    onError={(e) => {
-                                                        const target = e.target as HTMLImageElement;
-                                                        target.src = "https://via.placeholder.com/150";
-                                                    }}
                                                 />
                                             ) : (
                                                 <div className="w-full h-full bg-primary text-primary-content flex items-center justify-center text-4xl">

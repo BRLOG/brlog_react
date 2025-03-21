@@ -246,15 +246,17 @@ const Board: React.FC = () => {
                                 {contributors.map(contributor => (
                                     <div key={contributor.id} className="flex items-center justify-between p-2 hover:bg-base-200 rounded-md">
                                         <div className="flex items-center gap-2">
-                                            <img 
-                                                src={contributor.avatar} 
-                                                alt={contributor.name} 
-                                                className="w-6 h-6 rounded-full"
-                                                onError={(e) => {
-                                                    const target = e.target as HTMLImageElement;
-                                                    target.src = "https://via.placeholder.com/24";
-                                                }}
-                                            />
+                                            {contributor?.avatar ? (
+                                                <img 
+                                                    src={contributor.avatar} 
+                                                    alt={contributor.name} 
+                                                    className="w-6 h-6 rounded-full"
+                                                />
+                                            ) : (
+                                                <div className="w-6 h-6 rounded-full text-xs bg-primary text-primary-content flex items-center justify-center">
+                                                    {contributor?.name?.charAt(0).toUpperCase() || 'U'}
+                                                </div>
+                                            )}
                                             <span className="text-base-content">{contributor.name}</span>
                                         </div>
                                         <div className="flex items-center gap-1 text-sm text-base-content/70">
@@ -390,10 +392,6 @@ const Board: React.FC = () => {
                                                                     </div>
                                                                 )}
                                                             </div>
-                                                            
-                                                            
-
-                                                            
                                                             
                                                             {/* 댓글 수 */}
                                                             <div className="flex items-center text-sm text-base-content/70">
