@@ -4,6 +4,12 @@ import { MdLaptop } from 'react-icons/md';
 import { FaBookBookmark } from 'react-icons/fa6';
 import { PiCertificateDuotone } from 'react-icons/pi';
 import meta_card from '../../assets/img/meta_card.png';
+
+import brlog_thumbnail from '../../assets/img/projects/brlog-thumbnail.png';
+import kkobok_thumbnail from '../../assets/img/projects/kkobok-thumbnail.png';
+import smart_fridge_thumbnail from '../../assets/img/projects/smart-fridge-thumbnail.png';
+import tetris_video from '../../assets/img/projects/tetris-video.mp4';
+
 import { Link } from 'react-router-dom';
 
 import './AboutMe.css';
@@ -303,7 +309,7 @@ const AboutMe: React.FC = () => {
                         <div className="card bg-base-200 shadow-lg hover:shadow-xl transition-all duration-300 h-full">
                             <figure className="relative overflow-hidden h-[500px] bg-base-100">
                                 <img 
-                                    src="src/assets/img/projects/brlog-thumbnail.png" 
+                                    src={brlog_thumbnail}
                                     alt="BRLOG 프로젝트" 
                                     className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                                 />
@@ -323,7 +329,7 @@ const AboutMe: React.FC = () => {
                         <div className="card bg-base-200 shadow-lg hover:shadow-xl transition-all duration-300 h-full">
                             <figure className="relative overflow-hidden h-[500px] bg-base-100">
                                 <img 
-                                    src="src/assets/img/projects/kkobok-thumbnail.png" 
+                                    src={kkobok_thumbnail}
                                     alt="꼬박꼬밥 프로젝트" 
                                     className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                                 />
@@ -343,7 +349,7 @@ const AboutMe: React.FC = () => {
                         <div className="card bg-base-200 shadow-lg hover:shadow-xl transition-all duration-300 h-full">
                             <figure className="relative overflow-hidden h-[500px] bg-base-100">
                                 <img 
-                                    src="src/assets/img/projects/smart-fridge-thumbnail.png" 
+                                    src={smart_fridge_thumbnail}
                                     alt="스마트 냉장고 프로젝트" 
                                     className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                                 />
@@ -368,7 +374,7 @@ const AboutMe: React.FC = () => {
                             <figure className="relative overflow-hidden h-[500px] bg-base-100">
                                 <video 
                                     ref={videoRef}
-                                    src="src/assets/img/projects/tetris-video.mp4" 
+                                    src={tetris_video}
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                     muted
                                     loop
