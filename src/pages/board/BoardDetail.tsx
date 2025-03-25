@@ -491,7 +491,7 @@ const BoardDetail: React.FC = () => {
 
                     {/* 게시글 본문 */}
                     <div className="p-6 border-b border-base-300">
-                        <div className="prose max-w-none">
+                        <div className="prose max-w-none text-base-content">
                             <ReactMarkdown
                                 remarkPlugins={[remarkGfm]}
                                 rehypePlugins={[rehypeRaw]}

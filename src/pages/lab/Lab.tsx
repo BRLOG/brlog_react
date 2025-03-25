@@ -4,7 +4,10 @@ import {
     HiOutlineCode,
     HiOutlineDatabase,
     HiOutlineTerminal,
-    HiOutlineChip
+    HiOutlineChip,
+    HiOutlineCreditCard,
+    HiOutlinePencilAlt,
+    HiOutlinePhotograph
 } from 'react-icons/hi';
 
 // 실험 컴포넌트 임포트
@@ -12,6 +15,9 @@ import GraphQLExperiment from '../../components/lab/GraphQL';
 import AIExperiment from '../../components/lab/AI';
 import DatabaseExperiment from '../../components/lab/Database';
 import CLIExperiment from '../../components/lab/CLI';
+import TossPaymentExperiment from '../../components/lab/TossPayment';
+import AIPostGenerator from '../../components/lab/AIPostGenerator'; 
+import ImageGenerator from '../../components/lab/ImageGenerator';
 import { ExperimentType } from '../../components/lab/types';
 
 const Lab: React.FC = () => {
@@ -28,26 +34,47 @@ const Lab: React.FC = () => {
             component: <GraphQLExperiment />
         },
         {
-            id: 'ai',
-            name: 'AI 통합',
-            icon: <HiOutlineChip className="w-5 h-5" />,
-            description: '인공지능 API를 활용한 콘텐츠 생성',
-            component: <AIExperiment />
+            id: 'payment',
+            name: '토스 결제 테스트',
+            icon: <HiOutlineCreditCard className="w-5 h-5" />,
+            description: '토스 페이먼츠 API를 활용한 테스트 결제 구현',
+            component: <TossPaymentExperiment />
         },
         {
-            id: 'database',
-            name: '데이터베이스 최적화',
-            icon: <HiOutlineDatabase className="w-5 h-5" />,
-            description: 'MySQL 및 Redis를 활용한 성능 최적화 기법',
-            component: <DatabaseExperiment />
+            id: 'ai-post',
+            name: 'AI 게시글 작성기',
+            icon: <HiOutlinePencilAlt className="w-5 h-5" />,
+            description: 'AI를 활용한 블로그 게시글 초안 작성',
+            component: <AIPostGenerator />
         },
         {
-            id: 'terminal',
-            name: 'CLI 도구',
-            icon: <HiOutlineTerminal className="w-5 h-5" />,
-            description: '블로그 관리를 위한 커맨드라인 도구',
-            component: <CLIExperiment />
-        }
+            id: 'image-generator',
+            name: '이미지 생성기',
+            icon: <HiOutlinePhotograph className="w-5 h-5" />,
+            description: '텍스트 설명으로부터 블로그 썸네일이나 삽화 생성',
+            component: <ImageGenerator />
+        },
+        // {
+        //     id: 'ai',
+        //     name: 'AI 통합',
+        //     icon: <HiOutlineChip className="w-5 h-5" />,
+        //     description: '인공지능 API를 활용한 콘텐츠 생성',
+        //     component: <AIExperiment />
+        // },
+        // {
+        //     id: 'database',
+        //     name: '데이터베이스 최적화',
+        //     icon: <HiOutlineDatabase className="w-5 h-5" />,
+        //     description: 'MySQL 및 Redis를 활용한 성능 최적화 기법',
+        //     component: <DatabaseExperiment />
+        // },
+        // {
+        //     id: 'terminal',
+        //     name: 'CLI 도구',
+        //     icon: <HiOutlineTerminal className="w-5 h-5" />,
+        //     description: '블로그 관리를 위한 커맨드라인 도구',
+        //     component: <CLIExperiment />
+        // }
     ];
 
     // 현재 선택된 실험 찾기

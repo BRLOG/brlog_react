@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -65,6 +66,7 @@ interface Category {
 
 const BoardWrite: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation(); 
     const { isAuthenticated, user } = useAuth(); // 인증 상태 가져오기
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -110,6 +112,34 @@ const BoardWrite: React.FC = () => {
     
         fetchCategories();
     }, []);
+
+    // 위치 상태에서 데이터 가져오기 (초기 로드 시 한 번만 실행)
+    useEffect(() => {
+        // location.state로 전달된 데이터가 있는지 확인
+        if (location.state) {
+            const { title: draftTitle, content: draftContent, tags } = location.state as any;
+            
+            // 제목과 내용 설정
+            if (draftTitle) setTitle(draftTitle);
+            if (draftContent) setContent(draftContent);
+            
+            // 태그를 기반으로 카테고리 추론
+            if (tags && tags.length > 0) {
+                // 첫 번째 태그를 기준으로 카테고리 설정 (가장 관련성이 높은 카테고리 찾기)
+                const firstTag = tags[0].toLowerCase();
+                
+                // 카테고리 매핑 (간단한 예시, 실제 구현에 맞게 수정 필요)
+                if (firstTag.includes('개발') || firstTag.includes('코딩') || firstTag.includes('프로그래밍')) {
+                    setSelectedCategory('development');
+                } else if (firstTag.includes('일상')) {
+                    setSelectedCategory('daily');
+                } else if (firstTag.includes('질문') || firstTag.includes('도움')) {
+                    setSelectedCategory('help');
+                }
+                // 기타 매핑...
+            }
+        }
+    }, [location.state]);
 
     // 카테고리 아이콘 매핑 함수
     const getCategoryIcon = (categoryId: string) => {
