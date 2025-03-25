@@ -7,7 +7,9 @@ import {
     HiOutlineChip,
     HiOutlineCreditCard,
     HiOutlinePencilAlt,
-    HiOutlinePhotograph
+    HiOutlinePhotograph,
+    HiOutlineServer,
+    HiOutlineArrowsExpand
 } from 'react-icons/hi';
 
 // 실험 컴포넌트 임포트
@@ -19,6 +21,8 @@ import TossPaymentExperiment from '../../components/lab/TossPayment';
 import AIPostGenerator from '../../components/lab/AIPostGenerator'; 
 import ImageGenerator from '../../components/lab/ImageGenerator';
 import { ExperimentType } from '../../components/lab/types';
+import KafkaExperiment from '../../components/lab/Kafka';
+import RabbitMQExperiment from '../../components/lab/RabbitMQ';
 
 const Lab: React.FC = () => {
     // 현재 선택된 실험
@@ -54,6 +58,20 @@ const Lab: React.FC = () => {
             description: '텍스트 설명으로부터 블로그 썸네일이나 삽화 생성',
             component: <ImageGenerator />
         },
+        {
+            id: 'kafka',
+            name: 'Kafka 메시징',
+            icon: <HiOutlineArrowsExpand className="w-5 h-5" />,
+            description: '분산 스트리밍 플랫폼을 활용한 실시간 데이터 처리',
+            component: <KafkaExperiment />
+        },
+        {
+            id: 'rabbitmq',
+            name: 'RabbitMQ 메시징',
+            icon: <HiOutlineServer className="w-5 h-5" />,
+            description: '메시지 브로커를 활용한 비동기 통신 구현',
+            component: <RabbitMQExperiment />
+        }
         // {
         //     id: 'ai',
         //     name: 'AI 통합',
@@ -107,7 +125,7 @@ const Lab: React.FC = () => {
                         <div className="divider divider-horizontal hidden md:flex"></div>
 
                         {/* 우측 내용 영역 */}
-                        <div className="flex-grow flex-1 w-full p-6 overflow-auto bg-base-100 h-full">
+                        <div className="flex-grow flex-1 w-full p-6 overflow-auto bg-base-100 h-full text-base-content">
                             <div className="text-sm breadcrumbs mb-4">
                                 <ul>
                                     <li><a>실험실</a></li>

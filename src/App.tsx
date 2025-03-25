@@ -13,9 +13,11 @@ import BoardDetail from "./pages/board/BoardDetail";
 import BoardEdit from "./pages/board/BoardEdit";
 import Profile from "./pages/profile/Profile";
 import AboutMe from "./pages/about/AboutMe";
+import ProjectDetail from "./pages/about/ProjectDetail";
 import Lab from "./pages/lab/Lab";
-import PaymentSuccess from "./pages/lab/PaymentSuccess"; // 결제 성공 페이지 추가
-import PaymentFail from "./pages/lab/PaymentFail"; // 결제 실패 페이지 추가
+import ScrollToTop from "./components/common/ScrollToTop"; 
+import PaymentSuccess from "./pages/lab/PaymentSuccess"; // 결제 성공 페이지
+import PaymentFail from "./pages/lab/PaymentFail"; // 결제 실패 페이지
 
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -59,6 +61,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 <main className="container mx-auto px-6 py-8 overflow-hidden">
                     {children}
                 </main>
+                <ScrollToTop />
             </div>
         </>
     );
@@ -69,8 +72,9 @@ const DefaultLayout: React.FC<MainLayoutProps> = ({ children }) => {
     return (
         <>
             <NavigationBar />
-            <div className="bg-base-100" style={{ height: 'calc(100vh - 80px)' }}>
+            <div className="bg-base-100">
                 {children}
+                <ScrollToTop />
             </div>
         </>
     );
@@ -83,6 +87,7 @@ const AuthLayout: React.FC<MainLayoutProps> = ({ children }) => {
             <NavigationBar />
             <div className="min-h-screen">
                 {children}
+                <ScrollToTop />
             </div>
         </>
     );
@@ -197,6 +202,16 @@ const App: React.FC = () => {
                             element={
                                 <DefaultLayout>
                                     <AboutMe />
+                                </DefaultLayout>
+                            }
+                        />
+
+                        {/* BR 탭 프로젝트 상세 페이지 */}
+                        <Route
+                            path="/projects/:projectId"
+                            element={
+                                <DefaultLayout>
+                                    <ProjectDetail />
                                 </DefaultLayout>
                             }
                         />

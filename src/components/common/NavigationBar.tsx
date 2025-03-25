@@ -89,7 +89,7 @@ const NavigationBar: React.FC = () => {
                                         </div>
                                     )}
                                 </div>
-                                <span className="hidden md:inline user-name">{user?.userNm || '사용자'}</span>
+                                <span className="hidden md:inline user-name text-base-content">{user?.userNm || '사용자'}</span>
                             </label>
                             <ul tabIndex={0} className="mt-3 z-50 p-2 shadow menu menu-sm dropdown-content bg-base-content rounded-box w-52 border border-base-300">
                                 <li className="p-2">
