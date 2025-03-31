@@ -193,7 +193,7 @@ const ProjectDetail: React.FC = () => {
     if (!project) {
         return (
             <div className="container mx-auto px-4 py-8">
-                <div className="text-center">
+                <div className="text-center text-primary/40">
                     <h1 className="text-2xl font-bold mb-4">프로젝트를 찾을 수 없습니다</h1>
                     <button onClick={handleBackToPortfolio} className="btn btn-ghost gap-2">
                         <FaArrowLeft /> 포트폴리오로 돌아가기
@@ -214,7 +214,7 @@ const ProjectDetail: React.FC = () => {
 
             {/* 프로젝트 헤더 */}
             <div className="mb-10">
-                <h1 className="text-3xl font-bold mb-2">{project.title}</h1>
+                <h1 className="text-3xl font-bold mb-2 text-base-content">{project.title}</h1>
                 <div className="flex flex-wrap items-center gap-4 mb-4 text-base-content/60">
                     <div className="flex items-center gap-1">
                         <FaCalendarAlt />
@@ -271,7 +271,7 @@ const ProjectDetail: React.FC = () => {
 
             {/* 프로젝트 개요 */}
             <div className="mb-10">
-                <h2 className="text-2xl font-semibold mb-4">프로젝트 개요</h2>
+                <h2 className="text-2xl font-semibold mb-4 text-primary/40">프로젝트 개요</h2>
                 <p className="mb-4 text-base-content/80 leading-relaxed whitespace-pre-line">
                     {project.description}
                 </p>
@@ -279,7 +279,7 @@ const ProjectDetail: React.FC = () => {
 
             {/* 담당 역할 */}
             <div className="mb-10">
-                <h2 className="text-2xl font-semibold mb-4">담당 역할</h2>
+                <h2 className="text-2xl font-semibold mb-4 text-primary/40">담당 역할</h2>
                 <p className="mb-4 text-base-content/80 leading-relaxed whitespace-pre-line">
                     {project.myRole}
                 </p>
@@ -287,7 +287,7 @@ const ProjectDetail: React.FC = () => {
 
             {/* 주요 기능 */}
             <div className="mb-10">
-                <h2 className="text-2xl font-semibold mb-4">주요 기능</h2>
+                <h2 className="text-2xl font-semibold mb-4 text-primary/40">주요 기능</h2>
                 <ul className="list-disc pl-5 space-y-2 text-base-content/80">
                     {project.mainFeatures.map((feature, idx) => (
                         <li key={idx}>{feature}</li>
@@ -297,8 +297,8 @@ const ProjectDetail: React.FC = () => {
 
             {/* 기술 스택 */}
             <div className="mb-10">
-                <h2 className="text-2xl font-semibold mb-4">사용 기술</h2>
-                <div className="flex flex-wrap gap-2">
+                <h2 className="text-2xl font-semibold mb-4 text-primary/40">사용 기술</h2>
+                <div className="flex flex-wrap gap-2 text-base-content/80">
                     {project.techStack.map((tech, idx) => (
                         <span
                             key={idx}
@@ -312,7 +312,7 @@ const ProjectDetail: React.FC = () => {
 
             {/* 도전 과제 */}
             <div className="mb-10">
-                <h2 className="text-2xl font-semibold mb-4">도전 과제</h2>
+                <h2 className="text-2xl font-semibold mb-4 text-primary/40">도전 과제</h2>
                 <p className="mb-4 text-base-content/80 leading-relaxed whitespace-pre-line">
                     {project.challenges}
                 </p>
@@ -320,7 +320,7 @@ const ProjectDetail: React.FC = () => {
 
             {/* 성과 */}
             <div className="mb-10">
-                <h2 className="text-2xl font-semibold mb-4">성과 및 배운 점</h2>
+                <h2 className="text-2xl font-semibold mb-4 text-primary/40">성과 및 배운 점</h2>
                 <p className="mb-4 text-base-content/80 leading-relaxed whitespace-pre-line">
                     {project.achievements}
                 </p>
