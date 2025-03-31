@@ -193,7 +193,7 @@ const ProjectDetail: React.FC = () => {
     if (!project) {
         return (
             <div className="container mx-auto px-4 py-8">
-                <div className="text-center text-primary/40">
+                <div className="text-primary/40 text-center">
                     <h1 className="text-2xl font-bold mb-4">프로젝트를 찾을 수 없습니다</h1>
                     <button onClick={handleBackToPortfolio} className="btn btn-ghost gap-2">
                         <FaArrowLeft /> 포트폴리오로 돌아가기
@@ -206,7 +206,7 @@ const ProjectDetail: React.FC = () => {
     return (
         <div className="container mx-auto px-4 py-8 max-w-4xl">
             {/* 상단 네비게이션 */}
-            <div className="mb-8">
+            <div className="mb-8 text-primary/40">
                 <button onClick={handleBackToPortfolio} className="btn btn-ghost gap-2">
                     <FaArrowLeft /> 포트폴리오로 돌아가기
                 </button>
