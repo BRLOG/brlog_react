@@ -21,7 +21,7 @@ interface AuthContextType {
     checkAuth: () => Promise<void>;
     socialLogin: (provider: string) => void;
     handleOAuth2Redirect: () => void;
-    updateUserInfo: (updatedUser: User) => void; // 사용자 정보 업데이트 함수 추가
+    updateUserInfo: (updatedUser: User) => void;
 }
 
 // 기본 컨텍스트 값
@@ -35,7 +35,7 @@ const defaultAuthContext: AuthContextType = {
     checkAuth: async () => { },
     socialLogin: () => { },
     handleOAuth2Redirect: () => { },
-    updateUserInfo: () => { }, // 기본 함수 추가
+    updateUserInfo: () => { },
 };
 
 // 인증 컨텍스트 생성
@@ -379,7 +379,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         checkAuth,
         socialLogin,
         handleOAuth2Redirect,
-        updateUserInfo // 컨텍스트 값에 updateUserInfo 함수 추가
+        updateUserInfo
     };
 
     return (
