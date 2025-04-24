@@ -21,6 +21,7 @@ import PaymentFail from "./pages/lab/PaymentFail"; // 결제 실패 페이지
 
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 
 // 보호된 라우트 컴포넌트
 interface ProtectedRouteProps {
@@ -98,147 +99,149 @@ const App: React.FC = () => {
     return (
         <ThemeProvider>
             <AuthProvider>
-                <Router>
-                    <Routes>
-                        {/* 메인 페이지 */}
-                        <Route
-                            path="/"
-                            element={
-                                <MainLayout>
-                                    <CategoryCardLayout />
-                                </MainLayout>
-                            }
-                        />
+                <NotificationProvider>
+                    <Router>
+                        <Routes>
+                            {/* 메인 페이지 */}
+                            <Route
+                                path="/"
+                                element={
+                                    <MainLayout>
+                                        <CategoryCardLayout />
+                                    </MainLayout>
+                                }
+                            />
 
-                        {/* 게시판 페이지 */}
-                        <Route
-                            path="/board"
-                            element={
-                                <DefaultLayout>
-                                    <Board />
-                                </DefaultLayout>
-                            }
-                        />
-
-                        {/* 게시글 작성 페이지 */}
-                        <Route
-                            path="/board/new"
-                            element={
-                                <ProtectedRoute>
+                            {/* 게시판 페이지 */}
+                            <Route
+                                path="/board"
+                                element={
                                     <DefaultLayout>
-                                        <BoardWrite />
+                                        <Board />
                                     </DefaultLayout>
-                                </ProtectedRoute>
-                            }
-                        />
+                                }
+                            />
 
-                        {/* 게시글 상세 페이지 */}
-                        <Route
-                            path="/board/:postId"
-                            element={
-                                <DefaultLayout>
-                                    <BoardDetail />
-                                </DefaultLayout>
-                            }
-                        />
+                            {/* 게시글 작성 페이지 */}
+                            <Route
+                                path="/board/new"
+                                element={
+                                    <ProtectedRoute>
+                                        <DefaultLayout>
+                                            <BoardWrite />
+                                        </DefaultLayout>
+                                    </ProtectedRoute>
+                                }
+                            />
 
-                        {/* 게시글 수정 페이지 */}
-                        <Route
-                            path="/board/edit/:postId"
-                            element={
-                                <ProtectedRoute>
+                            {/* 게시글 상세 페이지 */}
+                            <Route
+                                path="/board/:postId"
+                                element={
                                     <DefaultLayout>
-                                        <BoardEdit />
+                                        <BoardDetail />
                                     </DefaultLayout>
-                                </ProtectedRoute>
-                            }
-                        />
+                                }
+                            />
 
-                        {/* 프로필 페이지 */}
-                        <Route
-                            path="/profile"
-                            element={
-                                <ProtectedRoute>
+                            {/* 게시글 수정 페이지 */}
+                            <Route
+                                path="/board/edit/:postId"
+                                element={
+                                    <ProtectedRoute>
+                                        <DefaultLayout>
+                                            <BoardEdit />
+                                        </DefaultLayout>
+                                    </ProtectedRoute>
+                                }
+                            />
+
+                            {/* 프로필 페이지 */}
+                            <Route
+                                path="/profile"
+                                element={
+                                    <ProtectedRoute>
+                                        <DefaultLayout>
+                                            <Profile />
+                                        </DefaultLayout>
+                                    </ProtectedRoute>
+                                }
+                            />
+
+                            {/* LAB 페이지 */}
+                            <Route
+                                path="/lab"
+                                element={
                                     <DefaultLayout>
-                                        <Profile />
+                                        <Lab />
                                     </DefaultLayout>
-                                </ProtectedRoute>
-                            }
-                        />
+                                }
+                            />
 
-                        {/* LAB 페이지 */}
-                        <Route
-                            path="/lab"
-                            element={
-                                <DefaultLayout>
-                                    <Lab />
-                                </DefaultLayout>
-                            }
-                        />
+                            {/* 결제 성공 페이지 */}
+                            <Route
+                                path="/front/lab/payment/success"
+                                element={
+                                    <DefaultLayout>
+                                        <PaymentSuccess />
+                                    </DefaultLayout>
+                                }
+                            />
 
-                        {/* 결제 성공 페이지 */}
-                        <Route
-                            path="/front/lab/payment/success"
-                            element={
-                                <DefaultLayout>
-                                    <PaymentSuccess />
-                                </DefaultLayout>
-                            }
-                        />
+                            {/* 결제 실패 페이지 */}
+                            <Route
+                                path="/front/lab/payment/fail"
+                                element={
+                                    <DefaultLayout>
+                                        <PaymentFail />
+                                    </DefaultLayout>
+                                }
+                            />
 
-                        {/* 결제 실패 페이지 */}
-                        <Route
-                            path="/front/lab/payment/fail"
-                            element={
-                                <DefaultLayout>
-                                    <PaymentFail />
-                                </DefaultLayout>
-                            }
-                        />
+                            {/* BR 탭 (ABOUT ME) 페이지 */}
+                            <Route
+                                path="/about"
+                                element={
+                                    <DefaultLayout>
+                                        <AboutMe />
+                                    </DefaultLayout>
+                                }
+                            />
 
-                        {/* BR 탭 (ABOUT ME) 페이지 */}
-                        <Route
-                            path="/about"
-                            element={
-                                <DefaultLayout>
-                                    <AboutMe />
-                                </DefaultLayout>
-                            }
-                        />
+                            {/* BR 탭 프로젝트 상세 페이지 */}
+                            <Route
+                                path="/projects/:projectId"
+                                element={
+                                    <DefaultLayout>
+                                        <ProjectDetail />
+                                    </DefaultLayout>
+                                }
+                            />
 
-                        {/* BR 탭 프로젝트 상세 페이지 */}
-                        <Route
-                            path="/projects/:projectId"
-                            element={
-                                <DefaultLayout>
-                                    <ProjectDetail />
-                                </DefaultLayout>
-                            }
-                        />
+                            {/* 로그인 페이지 */}
+                            <Route
+                                path="/login"
+                                element={
+                                    <AuthLayout>
+                                        <Login />
+                                    </AuthLayout>
+                                }
+                            />
 
-                        {/* 로그인 페이지 */}
-                        <Route
-                            path="/login"
-                            element={
-                                <AuthLayout>
-                                    <Login />
-                                </AuthLayout>
-                            }
-                        />
+                            {/* 회원가입 페이지 */}
+                            <Route
+                                path="/signup"
+                                element={
+                                    <AuthLayout>
+                                        <Signup />
+                                    </AuthLayout>
+                                }
+                            />
 
-                        {/* 회원가입 페이지 */}
-                        <Route
-                            path="/signup"
-                            element={
-                                <AuthLayout>
-                                    <Signup />
-                                </AuthLayout>
-                            }
-                        />
-
-                        <Route path="/oauth2/redirect" element={<OAuth2Redirect />} />
-                    </Routes>
-                </Router>
+                            <Route path="/oauth2/redirect" element={<OAuth2Redirect />} />
+                        </Routes>
+                    </Router>
+                </NotificationProvider>
             </AuthProvider>
         </ThemeProvider>
     );

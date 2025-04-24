@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import axios from 'axios';
@@ -23,11 +23,15 @@ import {
     HiOutlinePencil,
     HiOutlineTrash,
     HiOutlineExternalLink,
-    HiChevronLeft
+    HiChevronLeft,
+    HiOutlineRefresh
 } from 'react-icons/hi';
 
 // API 기본 URL
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8090';
+
+// 한 번에 로드할 댓글 수
+const COMMENTS_PER_PAGE = 10;
 
 // 게시글 타입 정의
 interface Post {
@@ -89,15 +93,91 @@ const BoardDetail: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [isLiked, setIsLiked] = useState<boolean>(false);
 
+    // 무한 스크롤을 위한 상태 변수
+    const [offset, setOffset] = useState<number>(0);
+    const [hasMore, setHasMore] = useState<boolean>(true);
+    const [loadingMore, setLoadingMore] = useState<boolean>(false);
+    const observer = useRef<IntersectionObserver | null>(null);
+    const lastCommentElementRef = useRef<HTMLDivElement | null>(null);
+
     // 댓글 새로고침 함수
     const refreshComments = async () => {
         try {
-            const commentResponse = await axios.get(`${API_URL}/post/${postId}/comments`);
-            setComments(commentResponse.data.data || []);
+            // 모든 댓글을 다시 불러올 때는 offset을 0으로 리셋
+            setOffset(0);
+            const commentResponse = await axios.get(`${API_URL}/post/${postId}/comments`, {
+                params: {
+                    offset: 0,
+                    size: COMMENTS_PER_PAGE
+                }
+            });
+
+            const commentsData = commentResponse.data.data || [];
+            setComments(commentsData);
+
+            // 불러온 댓글 수가 요청한 수보다 적으면 더 이상 댓글이 없다고 판단
+            setHasMore(commentsData.length === COMMENTS_PER_PAGE);
         } catch (err) {
             console.error('댓글 새로고침 오류:', err);
         }
     };
+
+    // 추가 댓글 로드 함수
+    const loadMoreComments = useCallback(async () => {
+        if (!hasMore || loadingMore) return;
+
+        try {
+            setLoadingMore(true);
+
+            const nextOffset = offset + COMMENTS_PER_PAGE;
+            const commentResponse = await axios.get(`${API_URL}/post/${postId}/comments`, {
+                params: {
+                    offset: nextOffset,
+                    size: COMMENTS_PER_PAGE
+                }
+            });
+
+            const newComments = commentResponse.data.data || [];
+
+            if (newComments.length > 0) {
+                setComments(prevComments => [...prevComments, ...newComments]);
+                setOffset(nextOffset);
+            }
+
+            // 불러온 댓글 수가 요청한 수보다 적으면 더 이상 댓글이 없다고 판단
+            setHasMore(newComments.length === COMMENTS_PER_PAGE);
+        } catch (err) {
+            console.error('추가 댓글 불러오기 오류:', err);
+        } finally {
+            setLoadingMore(false);
+        }
+    }, [postId, offset, hasMore, loadingMore]);
+
+    // Intersection Observer 설정
+    useEffect(() => {
+        // 마지막 댓글 요소를 관찰하는 함수
+        const lastCommentObserver = new IntersectionObserver(
+            (entries) => {
+                // 마지막 댓글이 화면에 보이면 추가 댓글 로드
+                if (entries[0].isIntersecting && hasMore) {
+                    loadMoreComments();
+                }
+            },
+            { threshold: 0.5 } // 요소가 50% 이상 보일 때 콜백 실행
+        );
+
+        // 현재 마지막 댓글 요소 관찰 시작
+        if (lastCommentElementRef.current) {
+            lastCommentObserver.observe(lastCommentElementRef.current);
+        }
+
+        // 컴포넌트 언마운트 시 Observer 해제
+        return () => {
+            if (lastCommentElementRef.current) {
+                lastCommentObserver.unobserve(lastCommentElementRef.current);
+            }
+        };
+    }, [loadMoreComments, hasMore, comments.length]);
 
     // 게시글 및 댓글 가져오기
     useEffect(() => {
@@ -124,8 +204,12 @@ const BoardDetail: React.FC = () => {
                     signal: signal
                 });
 
-                // 댓글 정보 가져오기
+                // 댓글 정보 가져오기 (첫 offset만)
                 const commentResponse = await axios.get(`${API_URL}/post/${postId}/comments`, {
+                    params: {
+                        offset: 0,
+                        size: COMMENTS_PER_PAGE
+                    },
                     signal: signal
                 });
 
@@ -134,7 +218,12 @@ const BoardDetail: React.FC = () => {
 
                 setCategories(categoriesData);
                 setPost(postResponse.data.data);
-                setComments(commentResponse.data.data || []);
+
+                const commentsData = commentResponse.data.data || [];
+                setComments(commentsData);
+
+                // 불러온 댓글 수가 요청한 수보다 적으면 더 이상 댓글이 없다고 판단
+                setHasMore(commentsData.length === COMMENTS_PER_PAGE);
 
                 // 좋아요 상태 확인 (로그인한 경우)
                 if (isAuthenticated) {
@@ -241,8 +330,8 @@ const BoardDetail: React.FC = () => {
                 modDt: response.data.data.modDt || currentTime
             };
 
-            // 새 댓글을 포함한 업데이트된 댓글 목록 설정
-            setComments([...comments, newComment]);
+            // 댓글 목록의 앞부분에 새 댓글 추가
+            setComments([newComment, ...comments]);
             setCommentText('');
 
             // 게시글의 댓글 수 업데이트
@@ -252,9 +341,6 @@ const BoardDetail: React.FC = () => {
                     commentCnt: post.commentCnt + 1
                 });
             }
-
-            // 서버에서 최신 댓글 목록 다시 가져오기 (선택사항)
-            // await refreshComments();
         } catch (err) {
             console.error('댓글 등록 오류:', err);
             alert('댓글 등록에 실패했습니다.');
@@ -378,6 +464,11 @@ const BoardDetail: React.FC = () => {
             console.error('댓글 삭제 오류:', err);
             alert('댓글 삭제에 실패했습니다.');
         }
+    };
+
+    // 댓글 더 불러오기 버튼 클릭 핸들러
+    const handleLoadMoreCommentsClick = () => {
+        loadMoreComments();
     };
 
     // 로딩 중 표시
@@ -604,46 +695,73 @@ const BoardDetail: React.FC = () => {
                     {/* 댓글 목록 */}
                     <div className="divide-y divide-base-300">
                         {comments.length > 0 ? (
-                            comments.map(comment => (
-                                <div key={comment.commentId} className="p-4">
-                                    <div className="flex items-start">
-                                        <div className="w-8 h-8 rounded-full overflow-hidden mr-3">
-                                            {comment?.profileImgUrl ? (
-                                                <img
-                                                    src={comment.profileImgUrl}
-                                                    alt={comment.userNm || '프로필'}
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            ) : (
-                                                <div className="w-full h-full text-xs bg-primary text-primary-content flex items-center justify-center">
-                                                    {comment?.userNm?.charAt(0).toUpperCase() || 'U'}
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="flex-grow">
-                                            <div className="flex items-center justify-between">
-                                                <div>
-                                                    <span className="font-medium text-base-content">{comment.userNm}</span>
-                                                    <span className="ml-2 text-xs text-base-content/70">{formatDate(comment.regDt)}</span>
-                                                </div>
-
-                                                {/* 자신의 댓글인 경우에만 삭제 버튼 표시 */}
-                                                {isAuthenticated && user?.userId === comment.userId && (
-                                                    <button
-                                                        className="text-base-content/50 hover:text-red-500"
-                                                        onClick={() => handleDeleteComment(comment.commentId)}
-                                                    >
-                                                        <HiOutlineTrash />
-                                                    </button>
+                            <>
+                                {comments.map((comment, index) => (
+                                    <div
+                                        key={comment.commentId}
+                                        className="p-4"
+                                        // 마지막 댓글 요소에 참조 설정
+                                        ref={index === comments.length - 1 ? lastCommentElementRef : null}
+                                    >
+                                        <div className="flex items-start">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden mr-3">
+                                                {comment?.profileImgUrl ? (
+                                                    <img
+                                                        src={comment.profileImgUrl}
+                                                        alt={comment.userNm || '프로필'}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full text-xs bg-primary text-primary-content flex items-center justify-center">
+                                                        {comment?.userNm?.charAt(0).toUpperCase() || 'U'}
+                                                    </div>
                                                 )}
                                             </div>
-                                            <div className="mt-1 text-base-content whitespace-pre-wrap">
-                                                {comment.content}
+                                            <div className="flex-grow">
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <span className="font-medium text-base-content">{comment.userNm}</span>
+                                                        <span className="ml-2 text-xs text-base-content/70">{formatDate(comment.regDt)}</span>
+                                                    </div>
+
+                                                    {/* 자신의 댓글인 경우에만 삭제 버튼 표시 */}
+                                                    {isAuthenticated && user?.userId === comment.userId && (
+                                                        <button
+                                                            className="text-base-content/50 hover:text-red-500"
+                                                            onClick={() => handleDeleteComment(comment.commentId)}
+                                                        >
+                                                            <HiOutlineTrash />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                <div className="mt-1 text-base-content whitespace-pre-wrap">
+                                                    {comment.content}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))
+                                ))}
+
+                                {/* 로딩 표시기 */}
+                                {loadingMore && (
+                                    <div className="p-4 flex justify-center">
+                                        <div className="loading loading-spinner loading-md"></div>
+                                    </div>
+                                )}
+
+                                {/* 더 불러오기 버튼 (자동 로드 실패 시 수동 로드용) */}
+                                {hasMore && !loadingMore && (
+                                    <div className="p-4 flex justify-center">
+                                        <button
+                                            className="btn btn-outline btn-sm flex items-center gap-1"
+                                            onClick={handleLoadMoreCommentsClick}
+                                        >
+                                            <HiOutlineRefresh className="w-4 h-4" />
+                                            댓글 더 불러오기
+                                        </button>
+                                    </div>
+                                )}
+                            </>
                         ) : (
                             <div className="p-8 text-center text-base-content/70">
                                 아직 댓글이 없습니다. 첫 댓글을 작성해보세요!
