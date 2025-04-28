@@ -54,6 +54,7 @@ const projectsData: Record<string, Project> = {
         mainFeatures: [
             '게시글 작성(Markdown) 및 조회',
             '게시글 상세 컨트롤(좋아요, 댓글)',
+            '댓글 알림(Reactor Kafka + WebFlux + Redis)',
             'BR탭 - 프로필 정보',
             '실험실',
             ' > GraphQL 연동 및 테스트',
@@ -62,7 +63,7 @@ const projectsData: Record<string, Project> = {
             ' > Stability AI를 통한 이미지 생성(image to image, text to image, 프롬프트)',
             ' > 메시지 큐(Message Queue - Kafka, RabbitMQ) 단순 구현',
         ],
-        techStack: ['Vite', 'TailwindCSS', 'DaisyUI', 'React', 'TypeScript', 'Spring Boot', 'Java', 'OAuth2', 'Docker', 'Redis', 'MySQL', 'AWS(EC2, RDS)', 'nginx', 'Kafka', 'RabbitMQ', 'graphQL', 'API(gemini-pro, Stability AI, toss payments)'],
+        techStack: ['Vite', 'TailwindCSS', 'DaisyUI', 'React', 'TypeScript', 'Spring Boot', 'Java', 'Spring WebFlux', 'OAuth2', 'Docker', 'Redis', 'MySQL', 'AWS(EC2, RDS)', 'nginx', 'Kafka', 'RabbitMQ', 'graphQL', 'API(gemini-pro, Stability AI, toss payments)'],
         images: [
             brlog_1,
             brlog_2,

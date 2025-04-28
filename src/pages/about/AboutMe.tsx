@@ -180,10 +180,14 @@ const AboutMe: React.FC = () => {
                     <h5 className="text-base-content/70 text-base font-semibold mb-2">언어 및 프레임워크</h5>
                     <ul className="text-base-content/60 list-disc pl-5">
                         <li className="mb-1">언어: Java, Python</li>
-                        <li className="mb-1">프레임워크: Spring Boot, Spring Cloud Eureka, Spring Cloud Gateway</li>
+                        <li className="mb-1">프레임워크: Spring Boot, Spring Cloud Eureka, Spring Cloud Gateway, Spring WebFlux</li>
                         <li className="mb-1">데이터 접근: JPA, Mybatis</li>
                         <li className="mb-1">API 개발: REST API, GraphQL</li>
                         <li className="mb-1">템플릿 엔진: Thymeleaf</li>
+                    </ul>
+                    <h5 className="text-base-content/70 text-base font-semibold mb-2">메시징 시스템</h5>
+                    <ul className="text-base-content/60 list-disc pl-5">
+                        <li className="mb-1">Apache Kafka(Reactor Kafka)</li>
                     </ul>
                     <h5 className="text-base-content/70 text-base font-semibold mb-2">데이터베이스</h5>
                     <ul className="text-base-content/60 list-disc pl-5">
